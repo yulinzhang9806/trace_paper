@@ -28,9 +28,6 @@ analyses:
       enable: False
       config: "config/analysis.config.yaml"
       infer: True
-      analysis: False
-      relate: False
-      hmmix: False
   summarize:
       enable: False
       config: "config/analysis.config.yaml"
@@ -41,24 +38,24 @@ analyses:
       
 
 paths:
+# Software paths
   relate: "/global/home/users/zhangyulin9806/relate_v1.1.5_x86_64_static"
   relate_lib: "/global/home/users/zhangyulin9806/relate_lib-master"
   argweaver: "/global/home/users/zhangyulin9806/argweaver/bin"
   ibdmix_exe: "/global/scratch/users/zhangyulin9806/IBDmix/build/src/"
   singer: "/global/scratch/users/zhangyulin9806/github/singer-0.1.8-beta-linux-x86_64/"
+  polarize_vcf: "data/other_methods_exe/polarize_vcf.py"
+  Sprime: "data/other_methods_exe/sprime.jar"
+# Data paths
   1000g_raw_vcf: "/global/scratch/p2p3/pl1_moorjani/SHARED_LAB/DATASETS/hg38/1000G/1000G_NYGC_PHASED_2022/1kGP_high_coverage_Illumina.chr"
   1000g_raw_vcf_suffix: ".filtered.SNV_INDEL_SV_phased_panel.vcf.gz"
   pilot_mask_hg38: "/global/scratch/p2p3/pl1_moorjani/SHARED_LAB/DATASETS/hg38/1000G/callability_mask/pilot_strict_combined.allChr.mask.bed"
   human_ancestor: "/global/scratch/p2p3/pl1_moorjani/SHARED_LAB/DATASETS/resources/hg38/human_ancestor/homo_sapiens_ancestor_"
-  polarize_vcf: "data/other_methods_exe/polarize_vcf.py"
   human_reference_hg38: "/global/scratch/p2p3/pl1_moorjani/SHARED_LAB/DATASETS/hg38/resources/fasta/hg38_chr"
   archaic_bcf: "/global/scratch/p2p3/pl1_moorjani/SHARED_LAB/DATASETS/hg38/ANCIENT/ARCHAIC/split_multiallelic/individuals_highcov"
   chrom_sizes: "sandbox/data/hg38.chrom.sizes"
   strict_mask: "sandbox/data_from_brc/hg38_strictmask.bed"
   centromeres: "sandbox/data/centromeres_grch38.bed"
-  # argneedle:
-  # tsinfer:
 
-model_simulations:
-    enable: False
-    sim_hmm: "config/sim_hmm.config.yaml"
+# result repo alias
+  

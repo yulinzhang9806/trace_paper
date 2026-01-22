@@ -23,21 +23,7 @@ configfile: "config/config.yaml"
 
 paths = config["paths"]
 
-validate(config, schema="../schema/config.schema.yaml")
-
 TARGETS = []
-nreps = 20
-
-# # Validate the simulation schema under the actual HMM model if required ...
-# if config["model_simulations"]["enable"]:
-#     with open(config["model_simulations"]["sim_hmm"], "r") as sim_config_fp:
-#         sim_config = yaml.safe_load(sim_config_fp)
-#         validate(sim_config, schema="../schema/sim.schema.yaml")
-#     for sim in sim_config.keys():
-#         for seed in range(sim_config[sim]["nreps"]):
-#             TARGETS.append(
-#                 f"results/simulations/hmm_joint_gamma/{sim}.rep{seed}.params.inferred.tsv"
-#             )
 
 
 # Establishing the file targets for the set of "simple" simulations
@@ -46,8 +32,6 @@ if config["analyses"]["simple_simulations"]["enable"]:
         config["analyses"]["simple_simulations"]["simple_config"], "r"
     ) as simple_config_fp:
         simple_config = yaml.safe_load(simple_config_fp)
-        # Validating that simple simulations following the simple schema
-        validate(simple_config, schema="../schema/simple.schema.yaml")
     n = simple_config["n"]
     ns = [10, 20, 50, 200]
     seeds = simple_config["seeds"]
@@ -73,7 +57,6 @@ if config["analyses"]["simple_simulations"]["enable"]:
 if config["analyses"]["error_input"]["enable"]:
     with open(config["analyses"]["error_input"]["config"], "r") as error_input_fp:
         analysis_input = yaml.safe_load(error_input_fp)
-        validate(analysis_input, schema="../schema/analysis.schema.yaml")
     INDS = range(int(analysis_input["error_input"]["inds"]))
     n = analysis_input["error_input"]["n"]
     seeds = analysis_input["error_input"]["seeds"]
@@ -103,7 +86,6 @@ if config["analyses"]["error_input"]["enable"]:
 if config["analyses"]["extreme_demo"]["enable"]:
     with open(config["analyses"]["extreme_demo"]["config"], "r") as extreme_demo_fp:
         analysis_input = yaml.safe_load(extreme_demo_fp)
-        validate(analysis_input, schema="../schema/analysis.schema.yaml")
     INDS = range(int(analysis_input["extreme_demo"]["inds"]))
     n = analysis_input["extreme_demo"]["n"]
     seeds = analysis_input["extreme_demo"]["seeds"]
@@ -129,7 +111,6 @@ if config["analyses"]["inference_range"]["enable"]:
         config["analyses"]["inference_range"]["config"], "r"
     ) as inference_range_fp:
         analysis_input = yaml.safe_load(inference_range_fp)
-        validate(analysis_input, schema="../schema/analysis.schema.yaml")
     INDS = range(int(analysis_input["inference_range"]["inds"]))
     n = analysis_input["inference_range"]["n"]
     seeds = analysis_input["inference_range"]["seeds"]
@@ -167,7 +148,6 @@ if config["analyses"]["inference_comparison"]["enable"]:
         config["analyses"]["inference_comparison"]["config"], "r"
     ) as inference_comparison_fp:
         analysis_input = yaml.safe_load(inference_comparison_fp)
-        validate(analysis_input, schema="../schema/analysis.schema.yaml")
     INDS = range(int(analysis_input["inference_comparison"]["inds"]))
     n = analysis_input["inference_comparison"]["n"]
     seeds = analysis_input["inference_comparison"]["seeds"]
@@ -209,7 +189,6 @@ if config["analyses"]["arg_infer"]["enable"]:
     inference = config["analyses"]["arg_infer"]["infer"]
     with open(config["analyses"]["arg_infer"]["config"], "r") as arg_infer_fp:
         analysis_input = yaml.safe_load(arg_infer_fp)
-        validate(analysis_input, schema="../schema/analysis.schema.yaml")
     n = analysis_input["arg_infer"]["n"]
     seeds = analysis_input["arg_infer"]["seeds"]
     INDS = range(int(analysis_input["arg_infer"]["inds"]))
@@ -269,7 +248,6 @@ if config["analyses"]["arg_infer"]["enable"]:
 if config["analyses"]["realdata"]["enable"]:
     with open(config["analyses"]["realdata"]["config"], "r") as realdata_fp:
         analysis_input = yaml.safe_load(realdata_fp)
-        validate(analysis_input, schema="../schema/analysis.schema.yaml")
     infer = config["analyses"]["realdata"]["infer"]
     analysis = config["analyses"]["realdata"]["analysis"]
     hmmix = config["analyses"]["realdata"]["hmmix"]
@@ -325,7 +303,6 @@ if config["analyses"]["realdata"]["enable"]:
 if config["analyses"]["summarize"]["enable"]:
     with open(config["analyses"]["summarize"]["config"], "r") as realdata_fp:
         analysis_input = yaml.safe_load(realdata_fp)
-        validate(analysis_input, schema="../schema/analysis.schema.yaml")
     snpinfo = config["analyses"]["summarize"]["snpinfo"]
     for dataset in analysis_input["summarize"]["datasets"]:
         for chrom in analysis_input["summarize"]["datasets"][dataset]["chroms"]:
@@ -340,7 +317,6 @@ if config["analyses"]["summarize"]["enable"]:
 if config["analyses"]["enrichment"]["enable"]:
     with open(config["analyses"]["enrichment"]["config"], "r") as realdata_fp:
         analysis_input = yaml.safe_load(realdata_fp)
-        validate(analysis_input, schema="../schema/analysis.schema.yaml")
     for dataset in analysis_input["enrichments"]["datasets"]:
         for p in ["NEA", "DEN", "Ghost"]:
             TARGETS.append(
@@ -359,12 +335,7 @@ include: "rules/hmm.smk"
 # include: "rules/realdata_hmm.smk"
 # include: "rules/realdata_arginfer.smk"
 # include: "rules/snpinfo.smk"
-<<<<<<< HEAD
-# include: "rules/snpinfo2.smk"
-=======
 include: "rules/enrichments.smk"
-
->>>>>>> 75c7231b40386d7021775cd549c3435b84205421
 
 # include: "rules/arg_infer.smk"
 # include: "rules/hmm_params.smk"

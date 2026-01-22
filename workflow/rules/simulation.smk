@@ -41,7 +41,7 @@ rule set_simple_model:
     run:
         graph = demes.load(input.simple_simulation)
         graph_dict = graph.asdict()
-        if params.model in ["ooa_neanderthal5r19_simp", "ooa_neanderthal5r19_comp", "ooa_neanderthal5r19_deep"]:
+        if params.model in ["ooa_neanderthal5r19_simp", "ooa_neanderthal5r19_comp"]:
             graph_dict["demes"][1]["start_time"] = params.archaic_split
             graph_dict["pulses"][0]["time"] = params.migration_time
             graph_dict["pulses"][0]["proportions"] = [params.migration_rate]

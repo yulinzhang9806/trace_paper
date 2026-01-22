@@ -1,0 +1,28 @@
+description: Split-Growth
+time_units: generations
+generation_time: 1
+
+demes:
+- name: C
+  description: Outgroup population with no archaic admixture
+  epochs:
+  - {end_time: 0.0, start_size: 10000.0}
+- name: B
+  description: Archaic population
+  start_time: 19275.862068965518
+  ancestors: [C]
+  epochs:
+  - {end_time: 0.0, start_size: 10000}
+- name: A
+  description: Target population
+  start_time: 2093.103448275862
+  ancestors: [C]
+  epochs:
+  - {end_time: 1241.3793103448277, start_size: 10000, end_size: 10000}
+  - {end_time: 0.0, start_size: 10000, end_size: 100000}
+
+pulses:
+- dest: A
+  time: 1724.1379310344828
+  sources: [B]
+  proportions: [0.02]
