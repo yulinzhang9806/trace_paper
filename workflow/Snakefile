@@ -1,0 +1,370 @@
+#!python3
+
+import os
+import subprocess
+import glob
+import yaml
+import pandas as pd
+from snakemake.utils import validate
+import pathlib
+import json
+
+# enforce bash
+shell.executable("/bin/bash")
+
+sys.path.append(".")
+
+# create log dir
+pathlib.Path("logs/").mkdir(parents=True, exist_ok=True)
+
+
+configfile: "config/config.yaml"
+
+
+paths = config["paths"]
+
+validate(config, schema="../schema/config.schema.yaml")
+
+TARGETS = []
+nreps = 20
+
+# # Validate the simulation schema under the actual HMM model if required ...
+# if config["model_simulations"]["enable"]:
+#     with open(config["model_simulations"]["sim_hmm"], "r") as sim_config_fp:
+#         sim_config = yaml.safe_load(sim_config_fp)
+#         validate(sim_config, schema="../schema/sim.schema.yaml")
+#     for sim in sim_config.keys():
+#         for seed in range(sim_config[sim]["nreps"]):
+#             TARGETS.append(
+#                 f"results/simulations/hmm_joint_gamma/{sim}.rep{seed}.params.inferred.tsv"
+#             )
+
+
+# Establishing the file targets for the set of "simple" simulations
+if config["analyses"]["simple_simulations"]["enable"]:
+    with open(
+        config["analyses"]["simple_simulations"]["simple_config"], "r"
+    ) as simple_config_fp:
+        simple_config = yaml.safe_load(simple_config_fp)
+        # Validating that simple simulations following the simple schema
+        validate(simple_config, schema="../schema/simple.schema.yaml")
+    n = simple_config["n"]
+    ns = [10, 20, 50, 200]
+    seeds = simple_config["seeds"]
+    inds = simple_config["inds"]
+    for c in simple_config["models"]:
+        for v in simple_config["models"][c]["versions"]:
+            for s in seeds:
+                TARGETS.append(f"results/simulations/outputs/{c}/{v}/n{n}_seed{s}.tsz")
+                TARGETS.append(
+                    f"results/simulations/outputs/{c}/{v}/n{n}_seed{s}.merged.bed"
+                )
+                # if c in ["ooa_neanderthal5r19_simp", "split_constant"] and v == "m2_ori":
+                if c == "split_constant" and v == "m10_ori":
+                    for nss in ns:
+                        TARGETS.append(
+                            f"results/simulations/outputs/{c}/{v}/n{nss}_seed{s}.tsz"
+                        )
+                        TARGETS.append(
+                            f"results/simulations/outputs/{c}/{v}/n{nss}_seed{s}.merged.bed"
+                        )
+
+# Establishing file targets for "wrongly specified input" analysis
+if config["analyses"]["error_input"]["enable"]:
+    with open(config["analyses"]["error_input"]["config"], "r") as error_input_fp:
+        analysis_input = yaml.safe_load(error_input_fp)
+        validate(analysis_input, schema="../schema/analysis.schema.yaml")
+    INDS = range(int(analysis_input["error_input"]["inds"]))
+    n = analysis_input["error_input"]["n"]
+    seeds = analysis_input["error_input"]["seeds"]
+    for m in analysis_input["error_input"]["models"]:
+        t = analysis_input["error_input"]["models"][m]["t"]
+        intros = analysis_input["error_input"]["models"][m]["intro"]
+        for v in analysis_input["error_input"]["models"][m]["versions"]:
+            for s in seeds:
+                for tt in t:
+                    if tt == t[2]:
+                        for intro in intros:
+                            TARGETS.append(
+                                f"results/hmm_results/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intro}_data.tsv"
+                            )
+                            TARGETS.append(
+                                f"results/hmm_results/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intro}_A_data.tsv"
+                            )
+                    else:
+                        TARGETS.append(
+                            f"results/hmm_results/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intros[2]}_data.tsv"
+                        )
+                        TARGETS.append(
+                            f"results/hmm_results/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intros[2]}_A_data.tsv"
+                        )
+
+# Establishing file targets for "extreme demograhpic models" analysis
+if config["analyses"]["extreme_demo"]["enable"]:
+    with open(config["analyses"]["extreme_demo"]["config"], "r") as extreme_demo_fp:
+        analysis_input = yaml.safe_load(extreme_demo_fp)
+        validate(analysis_input, schema="../schema/analysis.schema.yaml")
+    INDS = range(int(analysis_input["extreme_demo"]["inds"]))
+    n = analysis_input["extreme_demo"]["n"]
+    seeds = analysis_input["extreme_demo"]["seeds"]
+    for s in seeds:
+        for m in analysis_input["extreme_demo"]["models"]:
+            t = analysis_input["extreme_demo"]["models"][m]["t"]
+            intro = analysis_input["extreme_demo"]["models"][m]["intro"][0]
+            for v in range(
+                len(analysis_input["extreme_demo"]["models"][m]["versions"])
+            ):
+                version = analysis_input["extreme_demo"]["models"][m]["versions"][v]
+                if version == "m2_s10k":
+                    TARGETS.append(
+                        f"results/hmm_results/extreme_demo/{m}/{version}/n{n}_seed{s}_{t[1]}_{intro}_data.tsv"
+                    )
+                else:
+                    TARGETS.append(
+                        f"results/hmm_results/extreme_demo/{m}/{version}/n{n}_seed{s}_{t[0]}_{intro}_data.tsv"
+                    )
+
+if config["analyses"]["inference_range"]["enable"]:
+    with open(
+        config["analyses"]["inference_range"]["config"], "r"
+    ) as inference_range_fp:
+        analysis_input = yaml.safe_load(inference_range_fp)
+        validate(analysis_input, schema="../schema/analysis.schema.yaml")
+    INDS = range(int(analysis_input["inference_range"]["inds"]))
+    n = analysis_input["inference_range"]["n"]
+    seeds = analysis_input["inference_range"]["seeds"]
+    for s in seeds:
+        for m in analysis_input["inference_range"]["models"]:
+            t = analysis_input["inference_range"]["models"][m]["t"][0]
+            intro = analysis_input["inference_range"]["models"][m]["intro"]
+            for i, v in enumerate(
+                analysis_input["inference_range"]["models"][m]["versions"]
+            ):
+                if m == "split_constant":
+                    TARGETS.append(
+                        f"results/hmm_results/inference_range/{m}/{v}/n{n[2]}_seed{s}_{t}_{intro[i]}_A_data.tsv"
+                    )
+                    if v == "m10_ori":
+                        for nn in n:
+                            TARGETS.append(
+                                f"results/hmm_results/inference_range/{m}/{v}/n{nn}_seed{s}_{t}_{intro[i]}_A_data.tsv"
+                            )
+                # if v == "m2_ori" and not m == "ooa_neanderthal5r19_comp":
+                #     for nn in n:
+                #         TARGETS.append(
+                #             f"results/hmm_results/inference_range/{m}/{v}/n{nn}_seed{s}_{t}_{intro[i]}_data.tsv"
+                #         )
+                # else:
+                #     TARGETS.append(
+                #         f"results/hmm_results/inference_range/{m}/{v}/n{n[2]}_seed{s}_{t}_{intro[i]}_data.tsv"
+                #     )
+
+# Establishing file targets for "inference comparison" analysis
+if config["analyses"]["inference_comparison"]["enable"]:
+    runhmm = config["analyses"]["inference_comparison"]["analysis"]
+    inference = config["analyses"]["inference_comparison"]["infer"]
+    with open(
+        config["analyses"]["inference_comparison"]["config"], "r"
+    ) as inference_comparison_fp:
+        analysis_input = yaml.safe_load(inference_comparison_fp)
+        validate(analysis_input, schema="../schema/analysis.schema.yaml")
+    INDS = range(int(analysis_input["inference_comparison"]["inds"]))
+    n = analysis_input["inference_comparison"]["n"]
+    seeds = analysis_input["inference_comparison"]["seeds"]
+    inds = analysis_input["inference_comparison"]["inds"]
+    for s in seeds:
+        for m in analysis_input["inference_comparison"]["models"]:
+            t = analysis_input["inference_comparison"]["models"][m]["t"][0]
+            intro = analysis_input["inference_comparison"]["models"][m]["intro"][0]
+            for v in analysis_input["inference_comparison"]["models"][m]["versions"]:
+                if inference:
+                    # TARGETS.append(
+                    #     f"results/hmm_results/inference_comparison/{m}/{v}/simulations/n{n}_seed{s}_withARC.indiv.bed",
+                    # )
+                    # TARGETS.append(
+                    #     f"results/hmm_results/inference_comparison/{m}/{v}/ibdmix/n{n}_seed{s}_A.ibdmix"
+                    # )
+                    # TARGETS.append(
+                    #     f"results/hmm_results/inference_comparison/{m}/{v}/sprime/n{n}_seed{s}_Sprime.score"
+                    # )
+                    for j in range(int(inds)):
+                        TARGETS.append(
+                            f"results/hmm_results/inference_comparison/{m}/{v}/hmmix/n{n}_seed{s}.tsk_{int(j/2)}.hap{int(j%2)+1}.txt"
+                        )
+                if runhmm:
+                    for i in analysis_input["inference_comparison"]["models"][m][
+                        "inference"
+                    ]:
+                        TARGETS.append(
+                            f"results/hmm_results/inference_comparison/{m}/{v}/{i}/n{n}_seed{s}_{t}_{intro}_data.tsv"
+                        )
+                        if i == "singer":
+                            TARGETS.append(
+                                f"results/hmm_results/inference_comparison/{m}/{v}/{i}/n{n}_seed{s}_{t}_{intro}_cleanup.log"
+                            )
+
+# Establishing file targets for arg_infer analysis
+if config["analyses"]["arg_infer"]["enable"]:
+    runhmm = config["analyses"]["arg_infer"]["analysis"]
+    inference = config["analyses"]["arg_infer"]["infer"]
+    with open(config["analyses"]["arg_infer"]["config"], "r") as arg_infer_fp:
+        analysis_input = yaml.safe_load(arg_infer_fp)
+        validate(analysis_input, schema="../schema/analysis.schema.yaml")
+    n = analysis_input["arg_infer"]["n"]
+    seeds = analysis_input["arg_infer"]["seeds"]
+    INDS = range(int(analysis_input["arg_infer"]["inds"]))
+    asamp = analysis_input["arg_infer"]["asamp"]
+    for s in seeds:
+        for m in analysis_input["arg_infer"]["models"]:
+            t = analysis_input["arg_infer"]["models"][m]["t"]
+            intro = analysis_input["arg_infer"]["models"][m]["intro"][0]
+            for v in analysis_input["arg_infer"]["models"][m]["versions"]:
+                if inference:
+                    TARGETS.append(
+                        f"results/simulations/outputs/{m}/{v}/n{n}_seed{s}_out_full.vcf"
+                    )
+                    TARGETS.append(
+                        f"results/simulations/outputs/{m}/{v}/n{n}_seed{s}_A_full.vcf"
+                    )
+                    # TARGETS.append(
+                    #     f"results/hmm_results/arg_infer/{m}/{v}/relate/n{n}_seed{s}_A.trees"
+                    # )
+                    # TARGETS.append(
+                    #     f"results/hmm_results/arg_infer/{m}/{v}/relate/n{n}_seed{s}_out.trees"
+                    # )
+                    # TARGETS.append(
+                    #     f"results/hmm_results/arg_infer/{m}/{v}/singer/n{n}_seed{s}_A_99.tsz"
+                    # )
+                    # TARGETS.append(
+                    #     f"results/hmm_results/arg_infer/{m}/{v}/singer/n{n}_seed{s}_out_99.tsz"
+                    # )
+                    # TARGETS.append(
+                    #     f"results/hmm_results/arg_infer/{m}/{v}/singer/n{n}_seed{s}_done.log"
+                    # )
+                if runhmm:
+                    for tt in t:
+                        if s > 5 and (m == "ooa_neanderthal5r19_comp" or v != "m2_ori"):
+                            continue  # skip for now
+                        # TARGETS.append(
+                        #     f"results/hmm_results/arg_infer/{m}/{v}/singer/n{n}_seed{s}_{tt}_{intro}_data.tsv"
+                        # )
+                        # TARGETS.append(
+                        #     f"results/hmm_results/arg_infer/{m}/{v}/msprime/n{n}_seed{s}_{tt}_{intro}_data.tsv"
+                        # )
+                        # TARGETS.append(
+                        #     f"results/hmm_results/arg_infer/{m}/{v}/relate/n{n}_seed{s}_{tt}_{intro}_data.tsv"
+                        # )
+                        for ind in INDS:
+                            TARGETS.append(
+                                f"results/hmm_results/arg_infer/{m}/{v}/relate/n{n}_seed{s}_{tt}_{intro}_ppsind{ind}.npz"
+                            )
+                            TARGETS.append(
+                                f"results/hmm_results/arg_infer/{m}/{v}/msprime/n{n}_seed{s}_{tt}_{intro}_ppsind{ind}.npz"
+                            )
+                        TARGETS.append(
+                            f"results/hmm_results/arg_infer/{m}/{v}/singer/n{n}_seed{s}_{tt}_{intro}_cleanup.log"
+                        )
+
+# Establish file targets for realdata analysis
+if config["analyses"]["realdata"]["enable"]:
+    with open(config["analyses"]["realdata"]["config"], "r") as realdata_fp:
+        analysis_input = yaml.safe_load(realdata_fp)
+        validate(analysis_input, schema="../schema/analysis.schema.yaml")
+    infer = config["analyses"]["realdata"]["infer"]
+    analysis = config["analyses"]["realdata"]["analysis"]
+    hmmix = config["analyses"]["realdata"]["hmmix"]
+    for dataset in analysis_input["realdata"]["datasets"]:
+        for i, chrom in enumerate(
+            analysis_input["realdata"]["datasets"][dataset]["chroms"]
+        ):
+            if infer:
+                # TARGETS.append(
+                #     f"results/realdata/{dataset}/relate/relate_YRI_GBR/chr{chrom}_YRI_GBR.trees"
+                # )
+                # TARGETS.append(
+                #     f"results/realdata/{dataset}/singer/yri_gbr_chr{chrom}_99.tsz"
+                # )
+                # TARGETS.append(
+                #     f"results/realdata/{dataset}/singer/yri_gbr_chr{chrom}_done.log"
+                # )
+                TARGETS.append(
+                    f"results/realdata/{dataset}/vcf_files/1000g_hg38_chr{chrom}_LWK_flipped.sites"
+                )
+            if hmmix:
+                with open(f"results/realdata/{dataset}/hmmix/individual.json") as file:
+                    individuals = json.load(file)
+                HMMIX_INGROUP = individuals["ingroup"]
+                for ind in HMMIX_INGROUP:
+                    TARGETS.append(
+                        f"results/realdata/{dataset}/hmmix/02decode/{ind}.hap1.txt"
+                    )
+            if analysis:
+                relate = config["analyses"]["realdata"]["relate"]
+                individual_file = (
+                    f"results/realdata/{dataset}/GhostHMM/EUR_analysis_samples.txt"
+                )
+                with open(individual_file) as ind_fp:
+                    individuals = ind_fp.readlines()
+                    individuals = [x.strip() for x in individuals]
+                if relate:
+                    for t1 in analysis_input["realdata"]["datasets"][dataset]["t1"]:
+                        for t2 in analysis_input["realdata"]["datasets"][dataset]["t2"]:
+                            for ind in individuals:
+                                chrom_len = analysis_input["realdata"]["datasets"][
+                                    dataset
+                                ]["chrom_lengths"][i]
+                                for start in range(0, chrom_len, 50000000):
+                                    end = start + 50000000
+                                    TARGETS.append(
+                                        f"results/realdata/{dataset}/GhostHMM/relate/{t1}_{t2}/{ind}.hap1.posteriorProb.chr{chrom}_{start}_{end}.txt"
+                                    )
+                                    TARGETS.append(
+                                        f"results/realdata/{dataset}/GhostHMM/relate/{t1}_{t2}/{ind}.hap2.posteriorProb.chr{chrom}_{start}_{end}.txt"
+                                    )
+
+if config["analyses"]["summarize"]["enable"]:
+    with open(config["analyses"]["summarize"]["config"], "r") as realdata_fp:
+        analysis_input = yaml.safe_load(realdata_fp)
+        validate(analysis_input, schema="../schema/analysis.schema.yaml")
+    snpinfo = config["analyses"]["summarize"]["snpinfo"]
+    for dataset in analysis_input["summarize"]["datasets"]:
+        for chrom in analysis_input["summarize"]["datasets"][dataset]["chroms"]:
+            if snpinfo:
+                TARGETS.append(
+                    # f"results/realdata/{dataset}/snpinfo/1000g_biall_snpinfo.human_ancestor.archaic.afr.outgroup.strictmask.chr{chrom}.txt"
+                    f"results/realdata/{dataset}/snpinfo/1000g_biall_snpinfo.human_ancestor.archaic.lwkonly.outgroup.strictmask.manifesto.chr{chrom}.txt"     
+                    # f"results/realdata/{dataset}/snpinfo/1000g_biall_snpinfo.human_ancestor.archaic.yri.outgroup.strictmask.mutage.chr{chrom}.txt"
+                    # f"results/realdata/{dataset}/snpinfo/hgdp_biall_snpinfo.human_ancestor.archaic.afr.outgroup.strictmask.manifesto.chr{chrom}.txt"
+                )
+
+if config["analyses"]["enrichment"]["enable"]:
+    with open(config["analyses"]["enrichment"]["config"], "r") as realdata_fp:
+        analysis_input = yaml.safe_load(realdata_fp)
+        validate(analysis_input, schema="../schema/analysis.schema.yaml")
+    for dataset in analysis_input["enrichments"]["datasets"]:
+        for p in ["NEA", "DEN", "Ghost"]:
+            TARGETS.append(
+                f"results/enrichments/{dataset}/great/{p}.hg38.cell_component.csv"
+            )
+
+
+rule all:
+    input:
+        TARGETS,
+
+
+# include: "rules/simulation.smk"
+# include: "rules/other_methods.smk"
+include: "rules/hmm.smk"
+# include: "rules/realdata_hmm.smk"
+# include: "rules/realdata_arginfer.smk"
+# include: "rules/snpinfo.smk"
+<<<<<<< HEAD
+# include: "rules/snpinfo2.smk"
+=======
+include: "rules/enrichments.smk"
+
+>>>>>>> 75c7231b40386d7021775cd549c3435b84205421
+
+# include: "rules/arg_infer.smk"
+# include: "rules/hmm_params.smk"
