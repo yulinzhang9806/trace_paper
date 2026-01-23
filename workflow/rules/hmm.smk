@@ -22,6 +22,7 @@ rule general_indiv:
         ind_output_sub=str(paths["benchmark_trace_outputs"]) + "/{testing_scene}/{model}/{version}/n{n}_seed{seed}_{t}_{intro}_A_ppsind{ind}.npz",
     wildcard_constraints:
         ind = "|".join([str(i) for i in INDS])  # explicitly define possible values
+        STEP = "|".join(["error_input", "extreme_demo", "inference_range"])  # explicitly define possible values
     params:
         n=lambda wildcards: wildcards.n,
         t=lambda wildcards: wildcards.t,
@@ -514,13 +515,13 @@ rule arg_infer_relate_eval:
 rule arg_infer_singer_record:
     """Generate data for running HMM on singer trees."""
     input:
-        # target_tsz=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_full_{STEP}.tsz",
+        target_tsz=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_full_{STEP}.tsz",
         target_sub_tsz=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_{STEP}.tsz",
-        # outgroup_tsz=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_full_{STEP}.tsz",
+        outgroup_tsz=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_full_{STEP}.tsz",
         outgroup_sub_tsz=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_{STEP}.tsz",
     output:
         pt_output=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_ppsts{STEP}.npz",
-        # pt_output_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts{STEP}.npz",
+        pt_output_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts{STEP}.npz",
     wildcard_constraints:
         STEP = "|".join([str(i) for i in range(150, 200)])  # explicitly define possible values
     params:
@@ -529,12 +530,12 @@ rule arg_infer_singer_record:
         func = "mean",
         windowsize = 1000,
         t = lambda wildcards: wildcards.t,
-        # target_filepath=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_full_",
+        target_filepath=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_full_",
         target_sub_filepath=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_",
-        # outgroup_filepath=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_full_",
+        outgroup_filepath=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_full_",
         outgroup_sub_filepath=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_",
         pt_outpref=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_ppsts",
-        # pt_outpref_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts",
+        pt_outpref_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts",
     run:
         if params.func == "median":
             func = np.median
@@ -543,16 +544,16 @@ rule arg_infer_singer_record:
         else:
             raise ValueError("Function not recognized. Use 'mean' or 'median'.")
         analysis_utils = Analysis_workflow_utils()
-        # analysis_utils.record_hmm_data_singer_singlets(
-        #     ind = params.ind,
-        #     targetpref = params.target_filepath,
-        #     outgrouppref = params.outgroup_filepath,
-        #     asamp = params.step,
-        #     windowsize = params.windowsize,
-        #     t_archaic = int(params.t),
-        #     pp_output = params.pt_outpref,
-        #     func = func,
-        # )
+        analysis_utils.record_hmm_data_singer_singlets(
+            ind = params.ind,
+            targetpref = params.target_filepath,
+            outgrouppref = params.outgroup_filepath,
+            asamp = params.step,
+            windowsize = params.windowsize,
+            t_archaic = int(params.t),
+            pp_output = params.pt_outpref,
+            func = func,
+        )
         analysis_utils.record_hmm_data_singer_singlets(
             ind = params.ind,
             targetpref = params.target_sub_filepath,
@@ -572,13 +573,13 @@ rule arg_infer_singer_indiv:
             str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_ppsts{step}.npz",
             step=range(150, 200), allow_missing=True,
         ),
-        # expand(
-        #     str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts{step}.npz",
-        #     step=range(150, 200), allow_missing=True,
-        # ),
+        expand(
+            str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts{step}.npz",
+            step=range(150, 200), allow_missing=True,
+        ),
     output:
         ind_output=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_ppsind{ind}.npz",
-        # ind_output_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsind{ind}.npz",
+        ind_output_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsind{ind}.npz",
     wildcard_constraints:
         ind = "|".join([str(i) for i in INDS])  # explicitly define possible values
     params:
@@ -588,9 +589,9 @@ rule arg_infer_singer_indiv:
         intro=None,
         func = "mean",
         full_filepath=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_ppsts",
-        # sub_filepath=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts",
+        sub_filepath=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts",
         pp_outpref=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_pps",
-        # pp_outpref_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_pps",
+        pp_outpref_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_pps",
     run:
         if params.func == "median":
             func = np.median
@@ -609,16 +610,16 @@ rule arg_infer_singer_indiv:
             func = func,
             seed = int(params.seed),
         )
-        # analysis_utils.record_hmm_results_avg_oneind(
-        #     ind=int(params.ind),
-        #     npz_filepath = params.sub_filepath,
-        #     fsample = range(150, 200),
-        #     pp_output = params.pp_outpref_sub,
-        #     t_archaic = int(params.t),
-        #     intro_prop = params.intro,
-        #     func = func,
-        #     seed = int(params.seed),
-        # )
+        analysis_utils.record_hmm_results_avg_oneind(
+            ind=int(params.ind),
+            npz_filepath = params.sub_filepath,
+            fsample = range(150, 200),
+            pp_output = params.pp_outpref_sub,
+            t_archaic = int(params.t),
+            intro_prop = params.intro,
+            func = func,
+            seed = int(params.seed),
+        )
         print("Messages", file=sys.stderr)
 
 rule arg_infer_singer_eval:
@@ -628,14 +629,14 @@ rule arg_infer_singer_eval:
             str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_ppsind{ind}.npz",
             ind=INDS, allow_missing=True,
         ),
-        # expand(
-        #     str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsind{ind}.npz",
-        #     ind=INDS, allow_missing=True,
-        # ),
+        expand(
+            str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsind{ind}.npz",
+            ind=INDS, allow_missing=True,
+        ),
         ind_bed=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}.indiv.bed",
     output:
         perf_output=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_data.tsv",
-        # perf_output_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_data.tsv",
+        perf_output_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_data.tsv",
     params:
         n=lambda wildcards: wildcards.n,
         t=lambda wildcards: wildcards.t,
@@ -647,7 +648,7 @@ rule arg_infer_singer_eval:
         version=lambda wildcards: wildcards.version,
         intro=lambda wildcards: wildcards.intro,
         pp_outpref=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_ppsind",
-        # pp_outpref_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsind",
+        pp_outpref_sub=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsind",
     run:
         intro_prop = float(params.intro)
         analysis_utils = Analysis_workflow_utils()
@@ -663,18 +664,18 @@ rule arg_infer_singer_eval:
             perf_output=output.perf_output,
             maxlen=None,
         )
-        # analysis_utils.record_performance(
-        #     inds=int(params.inds),
-        #     ind_bed=input.ind_bed,
-        #     n=params.n,
-        #     pp_outpref=params.pp_outpref_sub,
-        #     l_cutoff=params.l_cutoff,
-        #     pp_cutoff=params.pp_cutoff,
-        #     sequence_length=params.sequence_length,
-        #     intro_prop=intro_prop,
-        #     perf_output=output.perf_output_sub,
-        #     maxlen=None,
-        # )
+        analysis_utils.record_performance(
+            inds=int(params.inds),
+            ind_bed=input.ind_bed,
+            n=params.n,
+            pp_outpref=params.pp_outpref_sub,
+            l_cutoff=params.l_cutoff,
+            pp_cutoff=params.pp_cutoff,
+            sequence_length=params.sequence_length,
+            intro_prop=intro_prop,
+            perf_output=output.perf_output_sub,
+            maxlen=None,
+        )
 
 rule arg_infer_singer_cleanup:
     """Cleanup intermediate files from singer trees."""
@@ -684,19 +685,19 @@ rule arg_infer_singer_cleanup:
             step=range(150, 200),
             allow_missing=True,
         ),
-        # sub_npz = expand(
-        #     str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts{step}.npz",
-        #     step=range(90, 100),
-        #     allow_missing=True,
-        # ),
+        sub_npz = expand(
+            str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts{step}.npz",
+            step=range(90, 100),
+            allow_missing=True,
+        ),
         ind_npz = expand(
             str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_ppsind{ind}.npz",
             ind=INDS, allow_missing=True,
         ),
-        # ind_sub_npz = expand(
-        #     str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsind{ind}.npz",
-        #     ind=INDS, allow_missing=True,
-        # ),
+        ind_sub_npz = expand(
+            str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsind{ind}.npz",
+            ind=INDS, allow_missing=True,
+        ),
     output:
         log = str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_cleanup.log",
     params:
@@ -706,70 +707,4 @@ rule arg_infer_singer_cleanup:
         rm {params.cleanpath}*ppsts*npz
         echo "Cleanup completed" > {output.log}
         """
-
-# rule arg_infer_argweaver:
-#     """Generate data for performance of HMM on argweaver trees."""
-#     input:
-#         target_tsz=expand(str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/argweaver/n{n}_seed{seed}_A.{STEP}.tsz", STEP=range(100), allow_missing=True,),
-#         outgroup_tsz=expand(str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/argweaver/n{n}_seed{seed}_out.{STEP}.tsz", STEP=range(100), allow_missing=True,),
-#         ind_bed=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}.indiv.bed",
-#     output:
-#         pp_output=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/argweaver/n{n}_seed{seed}_{t1}_{t2}_pps.npz",
-#         perf_output=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/argweaver/n{n}_seed{seed}_{t1}_{t2}_data.tsv",
-#     params:
-#         n=lambda wildcards: wildcards.n,
-#         t1=lambda wildcards: wildcards.t1,
-#         t2=lambda wildcards: wildcards.t2,
-#         inds=lambda wildcards: analysis_input["arg_infer"]["inds"],
-#         l_cutoff=lambda wildcards: analysis_input["l_cutoff"],
-#         pp_cutoff=lambda wildcards: analysis_input["pp_cutoff"],
-#         sequence_length=10e6,
-#         seed=lambda wildcards: wildcards.seed,
-#         version=lambda wildcards: wildcards.version,
-#         s = 1000, 
-#         fsample = range(100),
-#         target_pref=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/argweaver/n{n}_seed{seed}_A",
-#         outgroup_pref=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/argweaver/n{n}_seed{seed}_out",
-#         pp_outpref=str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/argweaver/n{n}_seed{seed}_{t1}_{t2}_pps",
-#     threads: 40
-#     run:
-#         s = str(params.version).strip("m").split("_")
-#         intro_prop = float(s[0]) * 1e-2
-#         analysis_utils = Analysis_workflow_utils()
-#         (
-#             target_pp,
-#             tree_span,
-#             outgroup_pp,
-#             tree_span_f,
-#         ) = analysis_utils.record_hmm_results_avg(
-#             inds=int(params.inds),
-#             s=params.s,
-#             filepath = params.target_pref,
-#             filepath_out = params.outgroup_pref,
-#             fsample = params.fsample,
-#             t1 = params.t1,
-#             t2 = params.t2,
-#             t2_low=int(params.t2) * (2/3),
-#             threads = threads,
-#             pp_output = params.pp_outpref,
-#             seq_len = params.sequence_length,
-#             composite = False,
-#             argweaver = True,
-#         )
-#         analysis_utils.record_performance(
-#             inds=int(params.inds),
-#             ind_bed=input.ind_bed,
-#             n=params.n,
-#             l_cutoff=params.l_cutoff,
-#             pp_cutoff=params.pp_cutoff,
-#             target_pp=target_pp,
-#             tree_span=tree_span,
-#             sequence_length=params.sequence_length,
-#             intro_prop=intro_prop,
-#             outgroup_pp=outgroup_pp,
-#             tree_span_f=tree_span_f,
-#             perf_output=output.perf_output,
-#             maxlen="posterior",
-#         )
-#         print("Messages", file=sys.stderr)
 
