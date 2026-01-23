@@ -1,0 +1,271 @@
+n: 100
+seeds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+sequence_length: 50e6
+recombination_rate: 1e-8
+models:
+  split_bottleneck:
+    versions:
+      m2_bn880_bl852_bt2093:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862 
+        bottleneck_time: 1241.3793103448277
+        bottleneck_size: 880 
+      m2_bn880_bl852_bt3093:
+        archaic_split: 19275.862068965518
+        migration_rate: [0.02]
+        migration_time: [1724.1379310344828]
+        growth_n: 10000.0 
+        bottleneck_start: 3093.103448275862
+        bottleneck_time: 2241.3793103448277 
+        bottleneck_size: 880 
+      m2_bn880_bl852_bt4093:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 4093.103448275862
+        bottleneck_time: 3241.3793103448277 
+        bottleneck_size: 880 
+      m2_bn880_bl1052_bt2093:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1041.3793103448277 
+        bottleneck_size: 880 
+      m2_bn880_bl1252_bt2093:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 841.3793103448277 
+        bottleneck_size: 880 
+      m2_bn680_bl852_bt2093:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 680 
+      m2_bn480_bl852_bt2093:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 480 
+  split_growth:
+    versions:
+      m2_g5x:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 50000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m2_g10x:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 100000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+  split_constant:
+    versions:
+      m2_ori:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m0.5_ori:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.005] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m1_ori:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.01] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m5_ori:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.05] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m10_ori:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.1] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m20_ori:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.2] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m25_ori:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.25] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m2_a1.2k:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1224.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m2_a0.7k:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m2_a3.7k:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [3724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m2_a5.7k:
+        archaic_split: 19275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [5724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m2_s22k:
+        archaic_split: 22275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m2_s25k:
+        archaic_split: 25275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m2_s15k:
+        archaic_split: 15275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+      m2_s10k:
+        archaic_split: 10275.862068965518 
+        migration_rate: [0.02] 
+        migration_time: [1724.1379310344828] 
+        growth_n: 10000.0 
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277 
+        bottleneck_size: 10000 
+  ooa_neanderthal5r19_simp:
+    versions:
+      intro_mha:
+        archaic_split: 19275.862068965518
+        migration_rate: 0.02
+        migration_time: 2500
+        growth_n: 10855.080951853866
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277
+        bottleneck_size: 880
+      m2_ori:
+        archaic_split: 19275.862068965518
+        migration_rate: 0.02
+        migration_time: 1724.1379310344828
+        growth_n: 10855.080951853866
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277
+        bottleneck_size: 880
+      m1_ori:
+        archaic_split: 19275.862068965518
+        migration_rate: 0.01
+        migration_time: 1724.1379310344828
+        growth_n: 10855.080951853866
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277
+        bottleneck_size: 880
+      m0.5_ori:
+        archaic_split: 19275.862068965518
+        migration_rate: 0.005
+        migration_time: 1724.1379310344828
+        growth_n: 10855.080951853866
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277
+        bottleneck_size: 880
+      m5_ori:
+        archaic_split: 19275.862068965518
+        migration_rate: 0.05
+        migration_time: 1724.1379310344828
+        growth_n: 10855.080951853866
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277
+        bottleneck_size: 880
+      m10_ori:
+        archaic_split: 19275.862068965518
+        migration_rate: 0.1
+        migration_time: 1724.1379310344828
+        growth_n: 10855.080951853866
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277
+        bottleneck_size: 880
+      m20_ori:
+        archaic_split: 19275.862068965518
+        migration_rate: 0.2
+        migration_time: 1724.1379310344828
+        growth_n: 10855.080951853866
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277
+        bottleneck_size: 880
+  ooa_neanderthal5r19_comp:
+    versions:
+      m2_ori:
+        archaic_split: 19275.862068965518
+        migration_rate: 0.02
+        migration_time: 1724.1379310344828
+        growth_n: 10855.080951853866
+        bottleneck_start: 2093.103448275862
+        bottleneck_time: 1241.3793103448277
+        bottleneck_size: 880

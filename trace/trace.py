@@ -25,7 +25,7 @@ from .trace_utils import (
 )
 
 class TRACE:
-    def __init__(self, t_admix = None, t_archaic = None):
+    def __init__(self, t_archaic = None):
         """Initialization of the class."""
         self.ts = None
         self.emissions = None

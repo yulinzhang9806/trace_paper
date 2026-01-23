@@ -45,7 +45,7 @@ inference_range:
     ooa_neanderthal5r19_simp:
       versions: ['m0.5_ori', 'm1_ori', 'm2_ori', 'm5_ori', 'm10_ori', 'm15_ori', 'm20_ori', 'intro_mha']
       t: [15000]
-      intro: [0.005, 0.01]#, 0.1, 0.15, 0.2, 0.02]
+      intro: [0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.02]
     split_constant:
       versions: ['m0.1_ori', 'm0.5_ori', 'm1_ori', 'm2_ori', 'm5_ori', 'm10_ori', 'm15_ori', 'm20_ori']
       t: [15000]
@@ -67,19 +67,17 @@ inference_comparison:
       versions: ['m2_ori', 'intro_mha']
       t: [15000]
       intro: [0.02]
-      # t1: [1724]
-      # t2: [19275]
-      inference: ['Ghost_HMM', 'hmmix', 'sprime', 'ibdmix']
+      inference: ['TRACE', 'hmmix', 'sprime', 'ibdmix']
     split_constant:
       versions: ['m2_ori']
       t: [15000]
       intro: [0.02]
-      inference: ['Ghost_HMM', 'hmmix', 'sprime', 'ibdmix']
+      inference: ['TRACE', 'hmmix', 'sprime', 'ibdmix']
     ooa_neanderthal5r19_comp:
       versions: ['m2_ori']
       t: [15000]
       intro: [0.02]
-      inference: ['Ghost_HMM', 'hmmix', 'sprime', 'ibdmix']
+      inference: ['TRACE', 'hmmix', 'sprime', 'ibdmix']
 
 arg_infer:
   n: 100

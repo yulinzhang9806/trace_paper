@@ -7,14 +7,13 @@ import numpy as np
 import pandas as pd
 import yaml
 from tqdm import tqdm
-from arg_hmm.arg_hmm import GhostProductHmm
-from arg_hmm.utils import ARG_utils
+from utils import ARG_utils
 
 rule set_simple_model:
     input:
         simple_simulation="data/template_models/simple/simple_{model}.yaml",
     output:
-        sim_yaml="results/simulations/models/{model}/{model}_{version}.yaml",
+        sim_yaml=str(paths["benchmark_simulations"]) + "/models/{model}/{model}_{version}.yaml",
     params:
         model=lambda wildcards: wildcards.model,
         archaic_split=lambda wildcards: simple_config["models"][wildcards.model][
@@ -77,23 +76,23 @@ rule set_simple_model:
 rule sim_simple_model:
     """Simulate a simple model."""
     input:
-        model="results/simulations/models/{model}/{model}_{version}.yaml",
+        model=str(paths["benchmark_simulations"]) + "/models/{model}/{model}_{version}.yaml",
     output:
-        tsz="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}.tsz",
-        target_tsz="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_A.tsz",
-        target_both_tsz="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_full.tsz",
-        null_tsz="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_null.tsz",
-        null_sub_tsz="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_null_A.tsz",
-        vcf="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}.vcf",
-        Asample="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_A.sample",
-        outsample="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_outgroup.sample",
-        sample_json="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_samples.json",
+        tsz=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}.tsz",
+        target_tsz=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_A.tsz",
+        target_both_tsz=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_full.tsz",
+        null_tsz=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_null.tsz",
+        null_sub_tsz=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_null_A.tsz",
+        vcf=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}.vcf",
+        Asample=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_A.sample",
+        outsample=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_outgroup.sample",
+        sample_json=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_samples.json",
     params:
         model=lambda wildcards: wildcards.model,
         version = lambda wildcards: wildcards.version,
         sequence_length=lambda wildcards: simple_config["sequence_length"],
         recombination_rate=lambda wildcards: simple_config["recombination_rate"],
-        null_vcf="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_null.vcf",
+        null_vcf=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_null.vcf",
     run:
         model = demes.load(str(input.model))
         demo = msprime.Demography.from_demes(model)
@@ -102,24 +101,14 @@ rule sim_simple_model:
         n = int(wildcards.n)
         seed = int(wildcards.seed)
         # simulate with migration info
-        if "YRI" in pop_dict.keys():
-            ts = msprime.sim_ancestry(
-                {"A": n, "YRI": n},
-                sequence_length=params.sequence_length,
-                recombination_rate=params.recombination_rate,
-                random_seed=seed,
-                demography=demo,
-                record_migrations=True,
-            )
-        else:
-            ts = msprime.sim_ancestry(
-                {"A": n, "C": n},
-                sequence_length=params.sequence_length,
-                recombination_rate=params.recombination_rate,
-                random_seed=seed,
-                demography=demo,
-                record_migrations=True,
-            )
+        ts = msprime.sim_ancestry(
+            {"A": n, "C": n},
+            sequence_length=params.sequence_length,
+            recombination_rate=params.recombination_rate,
+            random_seed=seed,
+            demography=demo,
+            record_migrations=True,
+        )
         tszip.compress(ts, str(output.tsz))
 
         # record vcf and sample information
@@ -143,101 +132,62 @@ rule sim_simple_model:
                 f.write(f"tsk_{i}\n")
 
         # simulate without migration for decapitate to work
-        if "YRI" in pop_dict.keys():
-            ts = msprime.sim_ancestry(
-                {"A": n, "YRI": n},
-                sequence_length=params.sequence_length,
-                recombination_rate=params.recombination_rate,
-                random_seed=seed,
-                demography=demo,
-            )
-            tszip.compress(
-                ts.simplify(samples=ts.samples(pop_dict["A"])), str(output.target_tsz)
-            )
-            tszip.compress(
-                ts, str(output.target_both_tsz)
-            )
-            graph = demes.load(input.model)
-            graph_dict = graph.asdict()
-            graph_dict["pulses"][0]["proportions"] = [0]
-            sim_graph = demes.Graph.fromdict(graph_dict)
-            demo = msprime.Demography.from_demes(sim_graph)
-            ts = msprime.sim_ancestry(
-                {"A": n, "YRI": n},
-                sequence_length=params.sequence_length,
-                recombination_rate=params.recombination_rate,
-                random_seed=seed,
-                demography=demo,
-            )
-            mts = msprime.sim_mutations(ts, rate=1.2e-8, random_seed=seed)
-            tszip.compress(
-                ts.simplify(samples=ts.samples(pop_dict["A"])), str(output.null_sub_tsz)
-            )
-            tszip.compress(
-                ts, str(output.null_tsz)
-            )
-            with open(str(params.null_vcf), "w") as vcf:
-                mts.write_vcf(vcf, contig_id=1)
-        else:
-            ts = msprime.sim_ancestry(
-                {"A": n, "C": n},
-                sequence_length=params.sequence_length,
-                recombination_rate=params.recombination_rate,
-                random_seed=seed,
-                demography=demo,
-            )
-            tszip.compress(
-                ts.simplify(samples=ts.samples(pop_dict["A"])), str(output.target_tsz)
-            )
-            tszip.compress(
-                ts, str(output.target_both_tsz)
-            )
-            graph = demes.load(input.model)
-            graph_dict = graph.asdict()
-            graph_dict["pulses"][0]["proportions"] = [0]
-            sim_graph = demes.Graph.fromdict(graph_dict)
-            demo = msprime.Demography.from_demes(sim_graph)
-            ts = msprime.sim_ancestry(
-                {"A": n, "C": n},
-                sequence_length=params.sequence_length,
-                recombination_rate=params.recombination_rate,
-                random_seed=seed,
-                demography=demo,
-            )
-            tszip.compress(
-                ts.simplify(samples=ts.samples(pop_dict["A"])), str(output.null_sub_tsz)
-            )
-            tszip.compress(
-                ts, str(output.null_tsz)
-            )
-            mts = msprime.sim_mutations(ts, rate=1.2e-8, random_seed=seed)
-            with open(str(params.null_vcf), "w") as vcf:
-                mts.write_vcf(vcf, contig_id=1)
+        ts = msprime.sim_ancestry(
+            {"A": n, "C": n},
+            sequence_length=params.sequence_length,
+            recombination_rate=params.recombination_rate,
+            random_seed=seed,
+            demography=demo,
+        )
+        tszip.compress(
+            ts.simplify(samples=ts.samples(pop_dict["A"])), str(output.target_tsz)
+        )
+        tszip.compress(
+            ts, str(output.target_both_tsz)
+        )
+        graph = demes.load(input.model)
+        graph_dict = graph.asdict()
+        graph_dict["pulses"][0]["proportions"] = [0]
+        sim_graph = demes.Graph.fromdict(graph_dict)
+        demo = msprime.Demography.from_demes(sim_graph)
+        ts = msprime.sim_ancestry(
+            {"A": n, "C": n},
+            sequence_length=params.sequence_length,
+            recombination_rate=params.recombination_rate,
+            random_seed=seed,
+            demography=demo,
+        )
+        tszip.compress(
+            ts.simplify(samples=ts.samples(pop_dict["A"])), str(output.null_sub_tsz)
+        )
+        tszip.compress(
+            ts, str(output.null_tsz)
+        )
+        mts = msprime.sim_mutations(ts, rate=1.2e-8, random_seed=seed)
+        with open(str(params.null_vcf), "w") as vcf:
+            mts.write_vcf(vcf, contig_id=1)
             
 
 
 rule extract_ghost_admix_simple:
-    """Extract true ghost admixture events from tree-sequences.
-
-    NOTE: this rule extracts the true ghost sections from the simple models...
-    """
+    """Extract true archaic admixture events from tree-sequences."""
     input:
-        tsz="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}.tsz",
-        model="results/simulations/models/{model}/{model}_{version}.yaml",
+        tsz=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}.tsz",
+        model=str(paths["benchmark_simulations"]) + "/models/{model}/{model}_{version}.yaml",
     params:
         model=lambda wildcards: wildcards.model,
         version=lambda wildcards: wildcards.version,
         n=lambda wildcards: wildcards.n,
         seed=lambda wildcards: wildcards.seed,
     output:
-        ind_bed="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}.indiv.bed",
-        merged_bed="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}.merged.bed",
+        ind_bed=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}.indiv.bed",
+        merged_bed=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}.merged.bed",
     run:
         ts = tszip.decompress(str(input.tsz))
         # Read in the model and create a population-dictionary
         demo = msprime.Demography.from_demes(demes.load(input.model))
         pop_dict = {i.name: i.id for i in demo.populations}
-        if params.model in ["ooa_neanderthal5r19_comp", "ooa_neanderthal5r19_deep"] or params.version == "intro_mha":
+        if params.model == "ooa_neanderthal5r19_comp" or params.version == "intro_mha":
             n = 2 * int(wildcards.n)
         else:
             n = int(wildcards.n)
@@ -249,13 +199,8 @@ rule extract_ghost_admix_simple:
         arg_utils.add_tree_sequence(ts)
         if params.model == "ooa_neanderthal5r19_simp" and params.version == "intro_mha":
             arg_utils.extract_ghost_intro_all(
-                from_pop=pop_dict["YRI"],
+                from_pop=pop_dict["C"],
                 to_pop=pop_dict["B"],
-            )
-        elif params.model == "ooa_neanderthal5r19_deep":
-            arg_utils.extract_ghost_intro_all(
-                from_pop=pop_dict["YRI"],
-                to_pop=pop_dict["C"],
             )
         else:
             arg_utils.extract_ghost_intro_all(

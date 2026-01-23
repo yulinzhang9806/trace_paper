@@ -2,16 +2,13 @@
 
 import os
 import subprocess
-import glob
 import yaml
 import pandas as pd
-from snakemake.utils import validate
 import pathlib
 import json
 
 # enforce bash
 shell.executable("/bin/bash")
-
 sys.path.append(".")
 
 # create log dir
@@ -19,14 +16,10 @@ pathlib.Path("logs/").mkdir(parents=True, exist_ok=True)
 
 
 configfile: "config/config.yaml"
-
-
 paths = config["paths"]
-
 TARGETS = []
 
-
-# Establishing the file targets for the set of "simple" simulations
+# Establishing the file targets for simulations used for TRACE benchmarking
 if config["analyses"]["simple_simulations"]["enable"]:
     with open(
         config["analyses"]["simple_simulations"]["simple_config"], "r"
@@ -39,21 +32,20 @@ if config["analyses"]["simple_simulations"]["enable"]:
     for c in simple_config["models"]:
         for v in simple_config["models"][c]["versions"]:
             for s in seeds:
-                TARGETS.append(f"results/simulations/outputs/{c}/{v}/n{n}_seed{s}.tsz")
+                TARGETS.append(f"{paths["benchmark_simulations"]}/outputs/{c}/{v}/n{n}_seed{s}.tsz")
                 TARGETS.append(
-                    f"results/simulations/outputs/{c}/{v}/n{n}_seed{s}.merged.bed"
+                    f"{paths["benchmark_simulations"]}/outputs/{c}/{v}/n{n}_seed{s}.merged.bed"
                 )
-                # if c in ["ooa_neanderthal5r19_simp", "split_constant"] and v == "m2_ori":
-                if c == "split_constant" and v == "m10_ori":
+                if c in ["ooa_neanderthal5r19_simp", "split_constant"] and v == "m2_ori":
                     for nss in ns:
                         TARGETS.append(
-                            f"results/simulations/outputs/{c}/{v}/n{nss}_seed{s}.tsz"
+                            f"{paths["benchmark_simulations"]}/outputs/{c}/{v}/n{nss}_seed{s}.tsz"
                         )
                         TARGETS.append(
-                            f"results/simulations/outputs/{c}/{v}/n{nss}_seed{s}.merged.bed"
+                            f"{paths["benchmark_simulations"]}/outputs/{c}/{v}/n{nss}_seed{s}.merged.bed"
                         )
 
-# Establishing file targets for "wrongly specified input" analysis
+# Establishing file targets for TRACE benchmarking -- "different specified input t" analysis
 if config["analyses"]["error_input"]["enable"]:
     with open(config["analyses"]["error_input"]["config"], "r") as error_input_fp:
         analysis_input = yaml.safe_load(error_input_fp)
@@ -69,20 +61,20 @@ if config["analyses"]["error_input"]["enable"]:
                     if tt == t[2]:
                         for intro in intros:
                             TARGETS.append(
-                                f"results/hmm_results/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intro}_data.tsv"
+                                f"{paths["benchmark_trace_outputs"]}/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intro}_data.tsv"
                             )
                             TARGETS.append(
-                                f"results/hmm_results/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intro}_A_data.tsv"
+                                f"{paths["benchmark_trace_outputs"]}/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intro}_A_data.tsv"
                             )
                     else:
                         TARGETS.append(
-                            f"results/hmm_results/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intros[2]}_data.tsv"
+                            f"{paths["benchmark_trace_outputs"]}/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intros[2]}_data.tsv"
                         )
                         TARGETS.append(
-                            f"results/hmm_results/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intros[2]}_A_data.tsv"
+                            f"{paths["benchmark_trace_outputs"]}/error_input/{m}/{v}/n{n}_seed{s}_{tt}_{intros[2]}_A_data.tsv"
                         )
 
-# Establishing file targets for "extreme demograhpic models" analysis
+# Establishing file targets for TRACE benchmarking -- "extreme demograhpic models" analysis
 if config["analyses"]["extreme_demo"]["enable"]:
     with open(config["analyses"]["extreme_demo"]["config"], "r") as extreme_demo_fp:
         analysis_input = yaml.safe_load(extreme_demo_fp)
@@ -99,13 +91,14 @@ if config["analyses"]["extreme_demo"]["enable"]:
                 version = analysis_input["extreme_demo"]["models"][m]["versions"][v]
                 if version == "m2_s10k":
                     TARGETS.append(
-                        f"results/hmm_results/extreme_demo/{m}/{version}/n{n}_seed{s}_{t[1]}_{intro}_data.tsv"
+                        f"{paths["benchmark_trace_outputs"]}/extreme_demo/{m}/{version}/n{n}_seed{s}_{t[1]}_{intro}_data.tsv"
                     )
                 else:
                     TARGETS.append(
-                        f"results/hmm_results/extreme_demo/{m}/{version}/n{n}_seed{s}_{t[0]}_{intro}_data.tsv"
+                        f"{paths["benchmark_trace_outputs"]}/extreme_demo/{m}/{version}/n{n}_seed{s}_{t[0]}_{intro}_data.tsv"
                     )
 
+# Establishing file targets for TRACE benchmarking -- "different input settings" analysis
 if config["analyses"]["inference_range"]["enable"]:
     with open(
         config["analyses"]["inference_range"]["config"], "r"
@@ -121,26 +114,17 @@ if config["analyses"]["inference_range"]["enable"]:
             for i, v in enumerate(
                 analysis_input["inference_range"]["models"][m]["versions"]
             ):
-                if m == "split_constant":
+                if v == "m2_ori" and not m == "ooa_neanderthal5r19_comp":
+                    for nn in n:
+                        TARGETS.append(
+                            f"{paths["benchmark_trace_outputs"]}/inference_range/{m}/{v}/n{nn}_seed{s}_{t}_{intro[i]}_data.tsv"
+                        )
+                else:
                     TARGETS.append(
-                        f"results/hmm_results/inference_range/{m}/{v}/n{n[2]}_seed{s}_{t}_{intro[i]}_A_data.tsv"
+                        f"{paths["benchmark_trace_outputs"]}/inference_range/{m}/{v}/n{n[2]}_seed{s}_{t}_{intro[i]}_data.tsv"
                     )
-                    if v == "m10_ori":
-                        for nn in n:
-                            TARGETS.append(
-                                f"results/hmm_results/inference_range/{m}/{v}/n{nn}_seed{s}_{t}_{intro[i]}_A_data.tsv"
-                            )
-                # if v == "m2_ori" and not m == "ooa_neanderthal5r19_comp":
-                #     for nn in n:
-                #         TARGETS.append(
-                #             f"results/hmm_results/inference_range/{m}/{v}/n{nn}_seed{s}_{t}_{intro[i]}_data.tsv"
-                #         )
-                # else:
-                #     TARGETS.append(
-                #         f"results/hmm_results/inference_range/{m}/{v}/n{n[2]}_seed{s}_{t}_{intro[i]}_data.tsv"
-                #     )
 
-# Establishing file targets for "inference comparison" analysis
+# Establishing file targets for TRACE benchmarking -- "comparison with hmmix and Sprime" analysis
 if config["analyses"]["inference_comparison"]["enable"]:
     runhmm = config["analyses"]["inference_comparison"]["analysis"]
     inference = config["analyses"]["inference_comparison"]["infer"]
@@ -158,30 +142,23 @@ if config["analyses"]["inference_comparison"]["enable"]:
             intro = analysis_input["inference_comparison"]["models"][m]["intro"][0]
             for v in analysis_input["inference_comparison"]["models"][m]["versions"]:
                 if inference:
-                    # TARGETS.append(
-                    #     f"results/hmm_results/inference_comparison/{m}/{v}/simulations/n{n}_seed{s}_withARC.indiv.bed",
-                    # )
-                    # TARGETS.append(
-                    #     f"results/hmm_results/inference_comparison/{m}/{v}/ibdmix/n{n}_seed{s}_A.ibdmix"
-                    # )
-                    # TARGETS.append(
-                    #     f"results/hmm_results/inference_comparison/{m}/{v}/sprime/n{n}_seed{s}_Sprime.score"
-                    # )
+                    TARGETS.append(
+                        f"{paths["benchmark_trace_outputs"]}/inference_comparison/{m}/{v}/simulations/n{n}_seed{s}_withARC.indiv.bed",
+                    )
+                    TARGETS.append(
+                        f"{paths["benchmark_trace_outputs"]}/inference_comparison/{m}/{v}/sprime/n{n}_seed{s}_Sprime.score"
+                    )
                     for j in range(int(inds)):
                         TARGETS.append(
-                            f"results/hmm_results/inference_comparison/{m}/{v}/hmmix/n{n}_seed{s}.tsk_{int(j/2)}.hap{int(j%2)+1}.txt"
+                            f"{paths["benchmark_trace_outputs"]}/inference_comparison/{m}/{v}/hmmix/n{n}_seed{s}.tsk_{int(j/2)}.hap{int(j%2)+1}.txt"
                         )
                 if runhmm:
                     for i in analysis_input["inference_comparison"]["models"][m][
                         "inference"
                     ]:
                         TARGETS.append(
-                            f"results/hmm_results/inference_comparison/{m}/{v}/{i}/n{n}_seed{s}_{t}_{intro}_data.tsv"
+                            f"{paths["benchmark_trace_outputs"]}/inference_comparison/{m}/{v}/{i}/n{n}_seed{s}_{t}_{intro}_data.tsv"
                         )
-                        if i == "singer":
-                            TARGETS.append(
-                                f"results/hmm_results/inference_comparison/{m}/{v}/{i}/n{n}_seed{s}_{t}_{intro}_cleanup.log"
-                            )
 
 # Establishing file targets for arg_infer analysis
 if config["analyses"]["arg_infer"]["enable"]:
@@ -200,48 +177,48 @@ if config["analyses"]["arg_infer"]["enable"]:
             for v in analysis_input["arg_infer"]["models"][m]["versions"]:
                 if inference:
                     TARGETS.append(
-                        f"results/simulations/outputs/{m}/{v}/n{n}_seed{s}_out_full.vcf"
+                        f"{paths["benchmark_simulations"]}/outputs/{m}/{v}/n{n}_seed{s}_out_full.vcf"
                     )
                     TARGETS.append(
-                        f"results/simulations/outputs/{m}/{v}/n{n}_seed{s}_A_full.vcf"
+                        f"{paths["benchmark_simulations"]}/outputs/{m}/{v}/n{n}_seed{s}_A_full.vcf"
                     )
-                    # TARGETS.append(
-                    #     f"results/hmm_results/arg_infer/{m}/{v}/relate/n{n}_seed{s}_A.trees"
-                    # )
-                    # TARGETS.append(
-                    #     f"results/hmm_results/arg_infer/{m}/{v}/relate/n{n}_seed{s}_out.trees"
-                    # )
-                    # TARGETS.append(
-                    #     f"results/hmm_results/arg_infer/{m}/{v}/singer/n{n}_seed{s}_A_99.tsz"
-                    # )
-                    # TARGETS.append(
-                    #     f"results/hmm_results/arg_infer/{m}/{v}/singer/n{n}_seed{s}_out_99.tsz"
-                    # )
-                    # TARGETS.append(
-                    #     f"results/hmm_results/arg_infer/{m}/{v}/singer/n{n}_seed{s}_done.log"
-                    # )
+                    TARGETS.append(
+                        f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/relate/n{n}_seed{s}_A.trees"
+                    )
+                    TARGETS.append(
+                        f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/relate/n{n}_seed{s}_out.trees"
+                    )
+                    TARGETS.append(
+                        f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/singer/n{n}_seed{s}_A_199.tsz"
+                    )
+                    TARGETS.append(
+                        f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/singer/n{n}_seed{s}_out_199.tsz"
+                    )
+                    TARGETS.append(
+                        f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/singer/n{n}_seed{s}_done.log"
+                    )
                 if runhmm:
                     for tt in t:
                         if s > 5 and (m == "ooa_neanderthal5r19_comp" or v != "m2_ori"):
                             continue  # skip for now
-                        # TARGETS.append(
-                        #     f"results/hmm_results/arg_infer/{m}/{v}/singer/n{n}_seed{s}_{tt}_{intro}_data.tsv"
-                        # )
-                        # TARGETS.append(
-                        #     f"results/hmm_results/arg_infer/{m}/{v}/msprime/n{n}_seed{s}_{tt}_{intro}_data.tsv"
-                        # )
-                        # TARGETS.append(
-                        #     f"results/hmm_results/arg_infer/{m}/{v}/relate/n{n}_seed{s}_{tt}_{intro}_data.tsv"
-                        # )
+                        TARGETS.append(
+                            f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/singer/n{n}_seed{s}_{tt}_{intro}_data.tsv"
+                        )
+                        TARGETS.append(
+                            f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/msprime/n{n}_seed{s}_{tt}_{intro}_data.tsv"
+                        )
+                        TARGETS.append(
+                            f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/relate/n{n}_seed{s}_{tt}_{intro}_data.tsv"
+                        )
                         for ind in INDS:
                             TARGETS.append(
-                                f"results/hmm_results/arg_infer/{m}/{v}/relate/n{n}_seed{s}_{tt}_{intro}_ppsind{ind}.npz"
+                                f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/relate/n{n}_seed{s}_{tt}_{intro}_ppsind{ind}.npz"
                             )
                             TARGETS.append(
-                                f"results/hmm_results/arg_infer/{m}/{v}/msprime/n{n}_seed{s}_{tt}_{intro}_ppsind{ind}.npz"
+                                f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/msprime/n{n}_seed{s}_{tt}_{intro}_ppsind{ind}.npz"
                             )
                         TARGETS.append(
-                            f"results/hmm_results/arg_infer/{m}/{v}/singer/n{n}_seed{s}_{tt}_{intro}_cleanup.log"
+                            f"{paths["benchmark_trace_outputs"]}/arg_infer/{m}/{v}/singer/n{n}_seed{s}_{tt}_{intro}_cleanup.log"
                         )
 
 # Establish file targets for realdata analysis
