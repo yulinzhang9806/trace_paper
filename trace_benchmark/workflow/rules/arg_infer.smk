@@ -3,7 +3,6 @@
 import numpy as np
 import pandas as pd
 import math
-#from workflow.scripts.ARGweaver_utils import ARGweaver_related_utils, ARGweaver_to_ts
 import tskit
 import tszip
 import json
@@ -65,7 +64,7 @@ rule relate_input:
         """
 
 
-rule get_all_positions:
+rule get_all_positions_vcf:
     """Get all of the positions for SNPs."""
     input:
         vcf="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}.vcf",
@@ -245,58 +244,56 @@ rule run_SINGER_A:
     """Estimate Ne from pi, run SINGER."""
     input:
         vcf="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_A_full.vcf",
-        parallel_singer = str(paths["singer"] + "/parallel_singer"),
+        parallel_singer = str(paths["singer"] + "parallel_singer"),
     params:
         genome_length = 50000000,
         pi_pref = "n{n}_seed{seed}_A_full",
         vcf_pref = "results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_A_full",
         sub_size = 2000000,
-        nsamp = 100,
-        thin = 20, 
+        nsamp = 200,
+        thin = 100, 
         mu = 1.2e-8,
+        ne = 20000,
         outpref = "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_full",
     output:
         trees=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_full_{STEP}.trees",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
     threads: 25
     shell:
         """
         vcftools --vcf {input.vcf} --window-pi {params.genome_length} --out {params.pi_pref}
-        ane=$(echo "pi=`tail -1 {params.pi_pref}.windowed.pi | cut -f 5`; scale=10; (pi/4.8)*10*10*10*10*10*10*10*10" | bc)
-        rm -r {params.pi_pref}*
-        {input.parallel_singer} -vcf {params.vcf_pref} -L {params.sub_size} -n {params.nsamp} -thin {params.thin} -polar 0.99 -num_cores {threads} -m {params.mu} -ratio 0.83 -Ne $ane -output {params.outpref}
+        {input.parallel_singer} -vcf {params.vcf_pref} -L {params.sub_size} -n {params.nsamp} -thin {params.thin} -polar 0.99 -num_cores {threads} -m {params.mu} -Ne {params.ne} -output {params.outpref}
         """
 
 rule run_SINGER_null:
     """Estimate Ne from pi, run SINGER."""
     input:
         vcf="results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_out_full.vcf",
-        parallel_singer = str(paths["singer"] + "/parallel_singer"),
+        parallel_singer = str(paths["singer"] + "parallel_singer"),
     params:
         genome_length = 50000000,
         pi_pref = "n{n}_seed{seed}_out_full",
         vcf_pref = "results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_out_full",
         sub_size = 2000000,
-        nsamp = 100,
-        thin = 20, 
+        nsamp = 200,
+        thin = 100, 
         mu = 1.2e-8,
+        ne = 20000,
         outpref = "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_full",
     output:
         trees=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_full_{STEP}.trees",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
     threads: 25
     shell:
         """
         vcftools --vcf {input.vcf} --window-pi {params.genome_length} --out {params.pi_pref}
-        one=$(echo "pi=`tail -1 {params.pi_pref}.windowed.pi | cut -f 5`; scale=10; (pi/4.8)*10*10*10*10*10*10*10*10" | bc)
-        rm -r {params.pi_pref}*
-        {input.parallel_singer} -vcf {params.vcf_pref} -L {params.sub_size} -n {params.nsamp} -thin {params.thin} -polar 0.99 -num_cores {threads} -m {params.mu} -ratio 0.83 -Ne $one -output {params.outpref}
+        {input.parallel_singer} -vcf {params.vcf_pref} -L {params.sub_size} -n {params.nsamp} -thin {params.thin} -polar 0.99 -num_cores {threads} -m {params.mu} -Ne {params.ne} -output {params.outpref}
         """
 
 rule subtree_tsk:
@@ -304,12 +301,12 @@ rule subtree_tsk:
     input:
         trees=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_full_{STEP}.trees",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
         out_trees=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_full_{STEP}.trees",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
     params:
@@ -317,22 +314,22 @@ rule subtree_tsk:
     output:
         Atrees=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_{STEP}.tsz",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
         out_trees=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_{STEP}.tsz",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
         Acompressed=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_full_{STEP}.tsz",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
         out_compressed=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_full_{STEP}.tsz",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
     run:
@@ -352,22 +349,22 @@ rule remove_intermediate_files:
     input:
         Atrees=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_{STEP}.tsz",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
         out_trees=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_{STEP}.tsz",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
         Acompressed=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_A_full_{STEP}.tsz",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
         out_compressed=expand(
             "results/hmm_results/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_out_full_{STEP}.tsz",
-            STEP = range(90, 100),
+            STEP = range(150, 200),
             allow_missing=True,
         ),
     params:

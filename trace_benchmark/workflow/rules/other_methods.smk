@@ -8,7 +8,7 @@ import msprime
 import tszip
 import yaml
 from tqdm import tqdm
-from arg_hmm.utils import ARG_utils
+from scripts.utils import ARG_utils
 
 # -------------- Simulate for inference comparison -------------
 rule simulate_with_arc:
@@ -228,9 +228,6 @@ rule run_ibdmix:
         {input.ibdmix} -g {output.altai_gt} --LOD-threshold 4.0 --minor-allele-count-threshold 1 --archaic-error 0.01 --modern-error-max 0.002 --modern-error-proportion 2 -o {output.altai_out}
         {input.ibdmix} -g {output.null_gt} --LOD-threshold 4.0 --minor-allele-count-threshold 1 --archaic-error 0.01 --modern-error-max 0.002 --modern-error-proportion 2 -o {output.null_out}
         """
-        # eur_sample=$(for ((i=0; i<n; i++)); do echo "tsk_$i"; done | paste -sd,)
-        # bcftools view -s $eur_sample -Ov {input.vcf} > {params.outpref}_eur.vcf
-        # bcftools view -s $eur_sample -Ov {input.vcf_null} > {params.outpref}_null_eur.vcf
 # ------------------------ HMMIX Processing -------------------------- #
 
 rule create_outgroup_whole:
@@ -422,21 +419,6 @@ rule run_Sprime:
         java -Xmx{params.GB}g -jar {input.sprime} gt={input.vcf} outgroup={input.outgroup} map={input.in_map} excludesamples={input.exclude_sample} out={params.outpref} minscore=1000
         java -Xmx{params.GB}g -jar {input.sprime} gt={input.vcf_null} outgroup={input.outgroup} map={input.in_map_null} excludesamples={input.exclude_sample} out={params.outpref_null} minscore=1000
         """
-
-# # ------------------------ Gamma SMC Processing  -------------------------- #
-
-# rule run_gamma_smc:
-#     """Run gamma smc."""
-#     input:
-#         vcf = "results/simulations/outputs/{model}/{version}/n{n}_seed{seed}_{p}.vcf",
-#         gamma_smc = str(paths["gamma_smc"] + "/bin/gamma_smc"),
-#     output:
-#         zst = "results/hmm_results/arg_infer/{model}/{version}/gammasmc/n{n}_seed{seed}_{p}.zst"
-#     shell:
-#         """
-#         {input.gamma_smc} -i {input.vcf} -s 1000 -t 0.83 -o {output.zst}
-#         """
-
 
 
 

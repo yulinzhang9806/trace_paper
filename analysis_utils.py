@@ -318,55 +318,26 @@ class ARG_utils:
             if tree.index not in self.tree_common and tree.index not in self.tree_afr:
                 self.tree_null.add(tree.index)
 
-    def extract_tmrca(self, ingroup, outgroup, tree):
-        """Extract TMRCA for one individual."""
-        assert self.ts is not None
-        mean_tmrca = []
-        var_tmrca = []
-        med_tmrca = []
-        all_tmrca = []
-        for inind in ingroup:
-            #            all_tmrca = []
-            for outind in outgroup:
-                if inind != outind:
-                    t = tree.tmrca(inind, outind)
-                    all_tmrca.append(t)
-            mean_tmrca.append(np.mean(all_tmrca))
-            var_tmrca.append(np.var(all_tmrca))
-            med_tmrca.append(np.median(all_tmrca))
-        assert len(mean_tmrca) == len(var_tmrca) == len(med_tmrca) == len(ingroup)
-        return mean_tmrca, var_tmrca, med_tmrca, all_tmrca
-
-    def extract_tmrca_all(self):
-        """Extract TMRCA for all individuals."""
-        out_afr = [[], [], [], []]
-        out_common = [[], [], [], []]
-        out_null = [[], [], [], []]
-        out = [out_common, out_afr, out_null]
-        for tree in self.ts.trees():
-            afr = []
-            i = 0
-            if tree.index in self.tree_common:
-                i = 0
-                for node in self.common_tree_node[tree.index]:
-                    for l in tree.samples(node):
-                        afr.append(l)
-            elif tree.index in self.tree_afr:
-                i = 1
-                for node in self.afr_tree_node[tree.index]:
-                    for l in tree.samples(node):
-                        afr.append(l)
-            else:
-                i = 2
-                afr = self.afr_samples[0:2]
-            m, v, med, tr = self.extract_tmrca(afr, self.afr_samples, tree)
-            out[i][0] = out[i][0] + m
-            out[i][1] = out[i][1] + v
-            out[i][2] = out[i][2] + med
-            #            if len(tr) > 0 and len(out[i][3]) == 0:
-            #                out[i][3] = tr
-            out[i][3] = out[i][3] + tr
-        return out[0], out[1], out[2]
+    def extract_tmrca(input_tsz, inds, other_samples, outpref, windowsize=1000):
+        def get_pairwise_times(ts, windowsize, k1, k2):
+            """Function for getting pairwise average tmrca over the genome."""
+            windows = np.arange(0, ts.sequence_length, windowsize)
+            windows = np.append(windows, ts.sequence_length)
+            times = ts.divergence(sample_sets=[k1, k2], windows=windows, mode='branch')
+            return windows, 0.5*times
+        if input_tsz.endswith(".tsz"):
+            ts = tszip.decompress(input_tsz)
+        else:
+            ts = tskit.load(input_tsz)
+        out = np.zeros(shape=(len(inds), len(other_samples), int(ts.sequence_length / windowsize) + (1 if ts.sequence_length % windowsize > 0 else 0)))
+        for i in range(len(inds)):
+            k1 = inds[i]
+            os = [s for s in other_samples if s != k1]
+            for j in range(len(os)):
+                k2 = os[j]
+                windows, times = get_pairwise_times(ts, windowsize, [k1], [k2])
+                out[i, j, :] = times
+        np.savez_compressed(f"{outpref}.npz", tmrca=out, windows=windows, inds=inds, other_samples=other_samples)
 
     def extract_coalescent_counts(self, target, pop, t_admix, t_archaic, tree):
         """Extract number of coalescent events in the time interval defined by the two Ts for one individual."""

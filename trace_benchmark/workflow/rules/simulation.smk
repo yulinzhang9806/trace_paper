@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import yaml
 from tqdm import tqdm
-from utils import ARG_utils
+from scripts.utils import ARG_utils
 
 rule set_simple_model:
     input:
@@ -84,15 +84,17 @@ rule sim_simple_model:
         null_tsz=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_null.tsz",
         null_sub_tsz=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_null_A.tsz",
         vcf=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}.vcf",
+        null_vcf=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_null.vcf",
         Asample=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_A.sample",
         outsample=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_outgroup.sample",
         sample_json=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_samples.json",
+    wildcard_constraints:
+        seed="\\d+",
     params:
         model=lambda wildcards: wildcards.model,
         version = lambda wildcards: wildcards.version,
         sequence_length=lambda wildcards: simple_config["sequence_length"],
         recombination_rate=lambda wildcards: simple_config["recombination_rate"],
-        null_vcf=str(paths["benchmark_simulations"]) + "/outputs/{model}/{version}/n{n}_seed{seed}_null.vcf",
     run:
         model = demes.load(str(input.model))
         demo = msprime.Demography.from_demes(model)
@@ -164,7 +166,7 @@ rule sim_simple_model:
             ts, str(output.null_tsz)
         )
         mts = msprime.sim_mutations(ts, rate=1.2e-8, random_seed=seed)
-        with open(str(params.null_vcf), "w") as vcf:
+        with open(str(output.null_vcf), "w") as vcf:
             mts.write_vcf(vcf, contig_id=1)
             
 

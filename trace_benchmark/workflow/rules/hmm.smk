@@ -6,8 +6,7 @@ import tszip
 import msprime
 import sys
 import os
-from workflow.scripts.utils import Analysis_workflow_utils
-from utils import Performance_utils
+from scripts.utils import Analysis_workflow_utils, Performance_utils
 import demes
 
 rule general_indiv:
@@ -21,7 +20,7 @@ rule general_indiv:
         ind_output=str(paths["benchmark_trace_outputs"]) + "/{testing_scene}/{model}/{version}/n{n}_seed{seed}_{t}_{intro}_ppsind{ind}.npz",
         ind_output_sub=str(paths["benchmark_trace_outputs"]) + "/{testing_scene}/{model}/{version}/n{n}_seed{seed}_{t}_{intro}_A_ppsind{ind}.npz",
     wildcard_constraints:
-        ind = "|".join([str(i) for i in INDS])  # explicitly define possible values
+        ind = "|".join([str(i) for i in INDS]),  # explicitly define possible values
         STEP = "|".join(["error_input", "extreme_demo", "inference_range"])  # explicitly define possible values
     params:
         n=lambda wildcards: wildcards.n,
@@ -75,7 +74,7 @@ rule general_eval:
         t=lambda wildcards: wildcards.t,
         l_cutoff=lambda wildcards: analysis_input["l_cutoff"],
         pp_cutoff=lambda wildcards: analysis_input["pp_cutoff"],
-        inds=lambda wildcards: analysis_input["{testing_scene}"]["inds"],
+        inds=lambda wildcards: analysis_input[wildcards.testing_scene]["inds"],
         sequence_length=50e6,
         seed=lambda wildcards: wildcards.seed,
         version=lambda wildcards: wildcards.version,
@@ -687,7 +686,7 @@ rule arg_infer_singer_cleanup:
         ),
         sub_npz = expand(
             str(paths["benchmark_trace_outputs"]) + "/arg_infer/{model}/{version}/singer/n{n}_seed{seed}_{t}_{intro}_A_ppsts{step}.npz",
-            step=range(90, 100),
+            step=range(150, 200),
             allow_missing=True,
         ),
         ind_npz = expand(

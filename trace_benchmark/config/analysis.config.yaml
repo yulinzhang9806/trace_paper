@@ -32,10 +32,6 @@ extreme_demo:
       versions: ['m2_ori','m2_a1.2k','m2_a0.7k','m2_a3.7k','m2_a5.7k','m2_s22k','m2_s25k', 'm2_s15k', 'm2_s10k']
       t: [15000, 9275]
       intro: [0.02]
-    split_multipulse:
-      versions: ['m2_t1724_m2_t2200','m2_t1724_m2_t2700','m2_t1724_m2_t3700']
-      t: [15000]
-      intro: [0.02]
 
 inference_range:
   n: [10, 50, 100, 200]
@@ -43,18 +39,17 @@ inference_range:
   seeds: [1, 2, 4, 3, 5, 6, 7, 8, 9, 10]
   models:
     ooa_neanderthal5r19_simp:
-      versions: ['m0.5_ori', 'm1_ori', 'm2_ori', 'm5_ori', 'm10_ori', 'm15_ori', 'm20_ori', 'intro_mha']
+      versions: ['m0.5_ori', 'm1_ori', 'm2_ori', 'm5_ori', 'm10_ori', 'm20_ori', 'intro_mha']
       t: [15000]
-      intro: [0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.02]
+      intro: [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.02]
     split_constant:
-      versions: ['m0.1_ori', 'm0.5_ori', 'm1_ori', 'm2_ori', 'm5_ori', 'm10_ori', 'm15_ori', 'm20_ori']
+      versions: ['m0.5_ori', 'm1_ori', 'm2_ori', 'm5_ori', 'm10_ori', 'm20_ori']
       t: [15000]
-      intro: [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2]
+      intro: [0.005, 0.01, 0.02, 0.05, 0.1, 0.2]
     ooa_neanderthal5r19_comp:
       versions: ['m2_ori']
       t: [15000]
       intro: [0.02]
-
 
 inference_comparison:
   n: 100
@@ -100,24 +95,4 @@ arg_infer:
       t: [10000, 15000]
       intro: [0.02]
       inference: ['msprime','relate','singer']
-
-realdata:
-  datasets:
-    1000g_hg38_2022:
-      chroms: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]
-
-summarize:
-  datasets:
-    1000g_hg38_2022:
-    # HGDP:
-      chroms: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]
-
-enrichments:
-  datasets:
-    EUR: "sandbox/data_from_brc/manifesto/singerave_t15000_eur.manifesto.count_merge.txt"
-    AFR: "sandbox/data_from_brc/manifesto/singerave_t15000_afr.manifesto.count_merge.txt"
-    OCN: "sandbox/data_from_brc/singerave_t15000_ocn.new.count_merge.txt"
-    SAS: "sandbox/data_from_brc/manifesto/singerave_t15000_sas.manifesto.count_merge.txt"
-    EAS: "sandbox/data_from_brc/manifesto/singerave_t15000_eas.manifesto.count_merge.txt"
-
 
