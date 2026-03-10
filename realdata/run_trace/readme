@@ -1,0 +1,116 @@
+# Yulin Zhang, 2026.2.24
+
+This folder contains scripts used to run TRACE on SINGER outputs and annotate TRACE outputs. 
+
+The final result tables from these analysis could be downloaded from Zenodo:
+**************
+
+We would use the example below to show how to use the scripts and workflow.
+
+## Step 1: run TRACE
+
+Here we would show how to run TRACE on SINGER outputs `yri_chr1_{250..299}.tsz` (example outputs from the workflows in folder `../singer/`). We would assume the tree sequences are built on 100 diploid YRI individuals (200 haplotypes).
+
+To extract input data for TRACE from these tree files:
+
+```
+# $i is from {250..299}; strictmask_chr1.bed is the 1000 Genomes strict accessibility mask
+indivs=$(printf "%d," {0..49} | sed 's/,$//')
+trace-extract --tree-file yri_chr1_${i}.tsz --t-archaic 15000 --individuals ${indivs} --include-regions strictmask_chr1.bed --chrom chr1 --window-size 1000 -o singer_chr1_t15000_strictmask_${i}_ind0_49
+```
+
+Here we show example for extracting data for 50 haplotypes at once (so one needs to run 4 times for 200 haplotypes). We run this step in this way to save memory usage and speed up downstream I/O. This step needs to cover all haplotypes and all posterior tree sequences.
+
+To run TRACE on each haplotype (0-199, showing 0 as example below):
+
+```
+# create input data files for TRACE per chromosome
+for c in {1..22}
+do
+    for i in {250..299}
+    do
+        cat singer_chr${c}_t15000_strictmask_${i}_ind0_49.npz >> singer_data_chr${c}.txt
+    done
+done
+
+datafile_string=$(printf "singer_data_chr%d.txt," {1..22} | sed 's/,$//')
+chrom_string=$(printf "chr%d," {1..22} | sed 's/,$//')
+gmap_string=$(printf "genetic_map_hg38_chr%d.txt," {1..22} | sed 's/,$//')
+
+# This would produce 22 output files, one file per chromosome: trace_t15000_strictmask_ind0_chr{1..22}.xss.npz
+> trace-infer -i 0 --data-files $datafile_string --chroms $chrom_string --genetic-maps $gmap_string -o trace_t15000_strictmask_ind0
+```
+
+We run `trace-infer` combining 22 chromosomes together for each individual. This step needs to cover all haplotypes (0-199).
+
+To get final outputs from TRACE:
+
+```
+# This would produce trace_t15000_strictmask_ind0.chr1.summary.txt
+trace-summarize -f trace_t15000_strictmask_ind0.chr1.xss.npz -c chr1 -o trace_t15000_strictmask_ind0_chr1
+```
+
+We run `trace-summarize` with default settings separately for each individual haplotype each chromosome.
+
+## Step 2: record SNP information
+
+In the `snpinfo` directory, we provide the snakemake workflow to annotate each SNP. To run the workflow, one needs to edit the `config.yaml` file to change the paths. If all paths are correctly specified, one could turn enable to True and run
+```
+snakemake --dry-run
+```
+and see no error message produced. The output files from this workflow are named as `1000g_biall_snpinfo.human_ancestor.archaic.afr.outgroup.strictmask.mutage.chr{chrom}.txt`
+
+Note the snpinfo files need to be generated independantly for different populations if they are not included in the same SINGER ARGs -- the mutation age estimations would differ in this case.
+
+## Step 3: annotate TRACE outputs
+
+After getting TRACE summary files from Step 1 and SNP info files from Step 2, one could use `annotate_trace_realdata.py` to annotate the TRACE detected archaic segments.
+
+```
+> python annotate_trace_realdata.py -h
+usage: annotate_trace_realdata.py [-h] --ind IND --inpref INPREF --chrom CHROM --sample-info SAMPLE_INFO --xss-pref XSS_PREF [--hmmix-path HMMIX_PATH] --ibdmix-path IBDMIX_PATH --snpinfo-pref SNPINFO_PREF
+                                  --bcf-pref BCF_PREF [--classify-group {1,2}] --outpref OUTPREF
+
+Generate sbatch job files for singer submission. Please modify exclude regions in the code.
+
+options:
+  -h, --help            show this help message and exit
+  --ind IND             individual ID
+  --inpref INPREF       input summary file prefix (parts before .summary.txt)
+  --chrom CHROM         chromosome, must match the chromosome field in input summary file
+  --sample-info SAMPLE_INFO
+                        sample information file
+  --xss-pref XSS_PREF   prefix for xss files (parts before .[chrom].xss.npz)
+  --hmmix-path HMMIX_PATH
+                        path to hmmix decoded outputs, assume file names are [samplename].hap[1/2].txt;if not provided, will skip appending hmmix info and only use ibdmix for annotation
+  --ibdmix-path IBDMIX_PATH
+                        path to ibdmix outputs, assume file names are [chrom].txt
+  --snpinfo-pref SNPINFO_PREF
+                        prefix to snpinfo file with mutation age info appended (parts before .[chrom].txt)
+  --bcf-pref BCF_PREF   prefix to bcf files for extracting allele frequency info, assume file names are [prefix][chrom].bcf
+  --classify-group {1,2}
+                        classification rule group for final annotation, 1 for more stringent classification and 2 for more relaxed classification
+  --outpref OUTPREF     output prefix for the final annotated tables, file names will be [outpref].count_merge.txt
+```
+
+One example run using the outputs from above could be
+
+```
+python annotate_trace_realdata.py --ind 0 --inpref trace_t15000_strictmask_ind0_chr1 --chrom chr1 --sample-info treeID.txt --xss-pref trace_t15000_strictmask_ind0 --hmmix-path hmmix/02decode/ --ibdmix-path ibdmix/EUR/ --snpinfo-pref 1000g_biall_snpinfo.human_ancestor.archaic.afr.outgroup.strictmask.mutage --bcf-pref bcf_files/1000g_hg38_ --outpref test
+```
+
+The `treeID.txt` file could be found in Table_S3.xslx in supplementary data from the manuscript for different populations. An example of the file structure is
+
+```
+> head -n 5 treeID.txt
+ID      Name    SampleID        Population      SuperGroup
+0       HG00096.hap1    HG00096 GBR     EUR
+1       HG00096.hap2    HG00096 GBR     EUR
+2       HG00097.hap1    HG00097 GBR     EUR
+3       HG00097.hap2    HG00097 GBR     EUR
+```
+
+**The output tables from this step for 1000 Genomes data presented in the manuscript could be found in Zenodo link:**
+****************
+
+

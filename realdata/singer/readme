@@ -1,0 +1,86 @@
+# Yulin Zhang, 2026.2.24
+
+This folder contains all scripts used to run SINGER on real data. In the text below, we would show how these scripts are used by breaking down the steps.
+
+## Step 1: make input files
+
+SINGER takes VCF files with only biallelic sites as inputs. Here I am showing a pipeline for handling 1000 Genomes phased VCF files.
+
+```
+# Get all the YRI individuals from sample information
+less -S 1000g_sample.tsv | grep "YRI" | cut -f 1 > YRI.sample
+# Subset the original VCF to maintain only biallelic sites & YRI samples
+bcftools view --samples-file YRI.sample -m 2 -M 2 -v snps ${1000g_vcf} -Oz -o 1000g_YRI_chr1.vcf.gz
+```
+
+If one wants to polarize the SNPs using an ancestral genome, the following command could be used.
+
+```
+# Polarize the VCF from ref / alt to ancestral / derived; note this script requires the input VCF to be gziped
+python polarize_vcf.py -vcf 1000g_YRI.vcf.gz -fasta ${ancestral_file} -output 1000g_YRI_chr1_polarized.vcf
+```
+
+## Step 2: make SLURM job scripts for running SINGER
+
+As recommanded by SINGER, to speed up the runs, we could break a long chromosome into small genomic chunks of 2 Mbp and run SINGER on them in parallel. Here we prepared `singer_base.sh` which is the base script specifying the parameters used in SINGER runs. We used `produce_sbatch.py` to produce SLURM scripts for each genomic chunk.
+
+```
+> python produce_sbatch.py -h
+usage: produce_sbatch.py [-h] --chunk-size CHUNK_SIZE --sbatch-base SBATCH_BASE --nposterior NPOSTERIOR
+                         --singer-outpref SINGER_OUTPREF --output OUTPUT --sites SITES --chromosome CHROMOSOME
+
+Generate sbatch job files for singer submission. Please modify exclude regions in the code.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --chunk-size CHUNK_SIZE
+                        size of each chunk
+  --sbatch-base SBATCH_BASE
+                        base sbatch file
+  --nposterior NPOSTERIOR
+                        number of posterior samples you want from SINGER
+  --singer-outpref SINGER_OUTPREF
+                        singer output prefix
+  --output OUTPUT       prefix for output files of this script
+  --sites SITES         sites file for the chromosome
+  --chromosome CHROMOSOME
+                        chromosome number (int)
+```
+
+Here is an example usage of the script
+
+```
+# Generate .sites file, which contains positions of all SNPs in the VCF file
+bcftools query -f "%POS\n" 1000g_YRI_chr1_polarized.vcf > 1000g_YRI_chr1_polarized.sites
+
+# Get all SLURM scripts for SINGER runs at different genomic chunks on chr1
+# this would preduce sbatch_files/yri_chr1_*.sbatch and sbatch_files/yri_chr1_posterior_*.txt
+python produce_sbatch.py --chunk-size 2000000 --sbatch-base singer_base.sh --nposterior 300 --singer-outpref /path/to/output/folder/yri_chr1 --output sbatch_files/yri_chr1 --sites 1000g_YRI_chr1_polarized.sites --chromosome 1
+```
+
+The output files above would be in the directory `sbatch_files`, containing files with names `yri_chr1_*.sbatch` (SLURM scripts one could directly `sbatch` submit to run, should have (genome_length / `--chunk-size`) number of files) and `yri_chr1_posterior_*.txt` (used to convert SINGER raw outputs to tskit format, should have the same number of files as the `--nposterior` input above).
+
+To submit jobs to SLURM and run SINGER, example code
+
+```
+# Submit jobs to SLURM to run SINGER
+cd sbatch_files
+for i in `ls *sbatch`
+do
+    sbatch $i
+done
+```
+
+## Step 3: convert SINGER outputs to tskit format
+
+A SINGER run with the output prefix `yri_chr1_${j}` would produce `yri_chr1_${j}_nodes_${i}.txt`, `yri_chr1_${j}_branches_${i}.txt`, `yri_chr1_${j}_muts_${i}.txt`, `yri_chr1_${j}_recombs_${i}.txt` where $i denotes the posterior tree sequence ID (0-299 in this case for the code above), $j denotes the genomic chunk (for example, 0 could indicate the region chr1:0-2000000). As noted in the previous step, we break the genome into 2 Mbp chunks, so for chr1 we would have around 114 chunks in total (excluding not accessible regions). We want to combine these 114 chunks (all $j) to one full chr1 for every posterior tree sequence ID (per $i).
+
+The `merge_ARGs.py` script takes in one of the `yri_chr1_posterior_{0..299}.txt` files as input and output one `.tsz` file per run.
+
+```
+# This would produce 300 posterior tree sequences sampled from SINGER for the whole chr1
+for i in {0..299}
+do
+    python merge_ARGs.py --file_table sbatch_files/yri_chr1_posterior_1.txt --output yri_chr1_${i}.tsz
+done
+```

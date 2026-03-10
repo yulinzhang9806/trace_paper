@@ -1,0 +1,9 @@
+models: ["nosup"] #, "super", "ooa", "ooa_ghost"]
+seeds: [1] #, 2, 3 , 4, 5, 6, 7, 8, 9, 10]
+
+
+paths:
+  # path to the generate_gt executable
+  generate_gt: "/global/scratch/users/zhangyulin9806/IBDmix/generate_gt"
+  # path to the ibdmix executable
+  ibdmix: "/global/scratch/users/zhangyulin9806/IBDmix/ibdmix"

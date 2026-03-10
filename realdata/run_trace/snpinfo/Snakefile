@@ -1,0 +1,36 @@
+#!python3
+
+import os
+import subprocess
+import glob
+import yaml
+
+# enforce bash
+shell.executable("/bin/bash")
+
+sys.path.append(".")
+
+configfile: "config.yaml"
+
+
+paths = config["paths"]
+
+
+TARGETS = []
+
+if config["analyses"]["snpinfo"]["enable"]:
+    for chrom in config["analyses"]["snpinfo"]["chromosomes"]:
+        TARGETS.append(
+            f"1000g_biall_snpinfo.human_ancestor.archaic.afr.outgroup.strictmask.mutage.chr{chrom}.txt"
+        )
+        if config["analyses"]["snpinfo"]["manifesto"]:
+            TARGETS.append(
+            f"1000g_biall_snpinfo.human_ancestor.archaic.lwkonly.outgroup.strictmask.manifesto.chr{chrom}.txt"
+        )
+
+rule all:
+    input:
+        TARGETS,
+
+include: "snpinfo.smk"
+

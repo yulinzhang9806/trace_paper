@@ -1,0 +1,63 @@
+# Yulin Zhang, 2026.1.23
+
+This folder contains snakenake workflows for benchmarking TRACE in simulation models (TRACE manuscript Supplementary Section S2 - S3).
+
+Folders:
+- config -- configuration files for snakemake
+- data -- simulation models and method executables
+- workflow -- .smk files and python scripts used in workflows
+
+## Before running and testing:
+
+(1) Build `cython` extensions
+
+To compile cython dependancies used in the workflow (assuming `cythonize` is appropriately linked from the environment):
+
+```
+cd trace_benchmark/workflow/scripts
+cythonize -i -a -3 trace_utils.pyx
+```
+
+This should create a `*.so` library that contains utility functions that are of use.
+------------
+
+Note: if you get error of numpy head file could not be found like the following
+
+```
+/Users/zhangyulin/Desktop/github/research/ghost_admixture_hmm/arg_hmm/arg_hmm_utils.c:1099:10: fatal error: 'numpy/arrayobject.h' file not found
+ 1099 | #include "numpy/arrayobject.h"
+      |          ^~~~~~~~~~~~~~~~~~~~~
+1 error generated.
+```
+
+You could run before `cythonize`
+
+```
+export "CFLAGS=-I/Users/zhangyulin/mambaforge/envs/ghost_admix_hmm/lib/python3.11/site-packages/numpy/core/include/ -O3"
+```
+
+which you need to change the path to specify numpy header files in your environment.
+------------
+
+(2) Edit config files
+
+Please check out config/config.yaml file.
+
+Under "analyses", we listed out all analyses this workflow would run. One could specify "True" or "False" to specify the part of analyses they want to run.
+
+Under "paths", we specifed a list of paths to program executables and directories to put the workflow outputs in. Please edit the paths to run the workflow on your machine.
+
+## Testing:
+
+To test if the workflow could be run with no error, one could try running
+
+```
+cd trace_benchmark
+snakemake --dry-run
+```
+
+Potential errors:
+1. "could not import trace_util" -- Please build cython extentions as suggested above
+2. "Missing Input Exceptions"
+    -- Please check if you've edited the "config.yaml" file correctly, specify "False" for all analyses that you are not running.
+    -- Please check if you've include the correct .smk file to run (and mark out unrelated .smk file) at the end of "Snakefile".

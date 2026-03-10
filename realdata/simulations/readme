@@ -1,0 +1,81 @@
+# Yulin Zhang, 2026.3.2
+
+This folder contains scripts used to run simulations from Section S5 and S8. With the script and steps below, one should be able to reproduce simulations and TRACE analysis on the simulation outcomes.
+
+## Step 1: Run simulations, hmmix, ibdmix and prepare singer job files
+
+For this step 1, one needs to run the snakemake workflow. Please edit the config.yaml file with correct paths. To test the workflow, one could run 
+
+```
+snakemake --dry-run
+```
+
+If the config file are correctly modified, this should run with no error.
+
+## Step 2: Submit sbatch jobs to run SINGER
+
+After the first step, sbatch files for SINGER runs should be ready for direct submission. One could do
+
+```
+cd results/${model}_model/singer/sbatch_files
+for $i in `ls *sbatch`
+do
+    sbatch $i
+done
+```
+
+This would submit all created jobs to run SINGER in parallel. After all SINGER jobs get finished, one could use the `merge_ARGs.py` script to convert SINGER outputs to tskit format.
+
+```
+# This would produce 300 posterior tree sequences sampled from SINGER for simulation seed s
+for i in {0..299}
+do
+    python merge_ARGs.py --file_table results/${model}_model/singer/sbatch_files/n100_seed${s}_posterior_1.txt --output results/${model}_model/singer/n100_seed${s}_${i}.tsz
+done
+```
+
+## Step 3: Run TRACE
+
+Once SINGER has finished running and outputs are converted to `.tsz` files, one could run TRACE on the singer outputs.
+
+```
+# create a folder for TRACE
+mkdir results/${model}_model/trace
+
+# Extracting TRACE inputs from singer trees. We recommand parallelize the for loop.
+indivs=$(printf "%d," {0..99} | sed 's/,$//')
+for i in {250..299}
+do
+    trace-extract --tree-file results/${model}_model/singer/n100_seed${s}_${i}.tsz --t-archaic 15000 --individuals ${indivs} --window-size 1000 -o results/${model}_model/trace/n100_seed${s}_data_t15000_${i}_ind0_99
+done
+
+# create input data files for TRACE per simulation seed
+for s in {1..10} # modify based on seeds here
+do
+    for i in {250..299}
+    do
+        cat results/${model}_model/trace/n100_seed${s}_data_t15000_${i}_ind0_99 >> results/${model}_model/trace/n100_seed${s}_singer_inputs.txt
+    done
+done
+
+# Run TRACE infer
+for ind in {0..99}
+do
+    for s in {1..10} # modify based on seeds here
+    do
+        trace-infer -i ${ind} --data-files results/${model}_model/trace/n100_seed${s}_singer_inputs.txt --chroms $s -o results/${model}_model/trace/n100_seed${s}_infer_t15000_ind${ind}
+    done
+done
+
+# Run TRACE summarize
+for ind in {0..99}
+do
+    for s in {1..10} # modify based on seeds here
+    do
+        trace-summarize -f results/${model}_model/trace/n100_seed${s}_infer_t15000_ind${ind} -c ${s} -o results/${model}_model/trace/n100_seed${s}_t15000_ind${ind}
+    done
+done
+```
+
+
+

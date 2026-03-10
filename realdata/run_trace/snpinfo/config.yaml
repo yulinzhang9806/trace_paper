@@ -1,0 +1,27 @@
+analyses:
+  snpinfo:
+    enable: False
+    chromosomes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+    manifesto: False
+
+      
+
+paths:
+  # Folder containing 1000 genomes bcf files, note the files need to be named as 1000g_hg38_chr{chrom}.bcf
+  1000g_bcf: "/global/scratch/users/zhangyulin9806/github/trace_paper/paths/1000g_bcf/"
+  # Folder containing human ancestor fasta files, note the files need to be named as chr{chrom}.fa
+  human_ancestor: "/global/scratch/users/zhangyulin9806/github/trace_paper/paths/human_ancestor/"
+  # Folder containing archaic bcf files, note the files need to have file address as {archaic_bcf_pref}.chr{chrom}.bcf
+  archaic_bcf_pref: "/global/scratch/users/zhangyulin9806/github/trace_paper/paths/archaic_bcf/highcov_archaics"
+  # File containing the list of SNPs in the outgroup populations for hmmix
+  hmmix_outgroup: "/global/scratch/users/zhangyulin9806/github/trace_paper/paths/hmmix_outgroup.txt"
+  # 1000 Genomes strictmask file
+  strictmask: "/global/scratch/users/zhangyulin9806/github/trace_paper/paths/strictmask.bed"
+  # Folder containing bed files for regions in archaic manifesto filter
+  manifesto_bed: "/global/scratch/users/zhangyulin9806/github/trace_paper/paths/manifesto/"
+  # Folder containing the singer trees in .tsz format, note the files need to be named as singer_chr{chrom}_{PPID}.tsz, where PPID is the ID of a posterior tree sequence.
+  # In our study PPID has range(250, 300), but you can adjust it according to your needs
+  singer_trees: "/global/scratch/users/zhangyulin9806/github/trace_paper/paths/singer_trees/"
+  # File containing YRI samples included in the SINGER runs, one sample name per row
+  YRI_sample: "/global/scratch/users/zhangyulin9806/github/trace_paper/paths/YRI.sample"
+

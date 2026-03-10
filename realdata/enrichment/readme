@@ -1,0 +1,15 @@
+# Arjun Biddanda, 2026.3.2
+
+This folder contains all scripts used to run SINGER on real data. In the text below, we would show how these scripts are used by breaking down the steps.
+
+This folder contains all steps used to estimate: 1) peaks of introgressed ancestry 2) deserts of archaic ancestry and 3) gene-set enrichments. 
+
+All configuration details are in `config.yaml`. 
+
+To run the pipeline (using data from Zenodo), include paths to relevant files in zenodo and run: 
+
+```
+snakemake -s enrichments.smk -j8 -p -n
+```
+
+(`-n` gives a dryrun, remove it to actuall run the full pipeline).

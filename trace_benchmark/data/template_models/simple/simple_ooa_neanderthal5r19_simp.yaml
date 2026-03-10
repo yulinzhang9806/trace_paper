@@ -1,0 +1,29 @@
+description: Simplified-OOA-Model
+time_units: generations
+generation_time: 1
+demes:
+- name: C
+  description: 1000 Genomes YRI (Yoruba)
+  epochs:
+  - {end_time: 20344.827586206897, start_size: 20000}
+  - {end_time: 0.0, start_size: 25900.0}
+- name: B
+  description: Putative Neanderthals
+  start_time: 19275.862068965518
+  ancestors: [C]
+  epochs:
+  - {end_time: 0.0, start_size: 3600}
+- name: A
+  description: 1000 Genomes CEU (Utah Residents (CEPH) with Northern and Western European
+    Ancestry)
+  start_time: 2093.103448275862
+  ancestors: [C]
+  epochs:
+  - {end_time: 1241.3793103448277, start_size: 880, end_size: 880}
+  - {end_time: 0.0, start_size: 2300.0, end_size: 10855.080951853866}
+
+pulses:
+- dest: A
+  time: 1724.1379310344828
+  sources: [B]
+  proportions: [0.02]

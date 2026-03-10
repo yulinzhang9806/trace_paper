@@ -1,0 +1,37 @@
+analyses:
+  simple_simulations:
+      enable: False
+      simple_config: "config/simple_sims.config.yaml"
+  error_input:
+      enable: False
+      config: "config/analysis.config.yaml"
+  extreme_demo:
+      enable: False
+      config: "config/analysis.config.yaml"
+  inference_range:
+      enable: False
+      config: "config/analysis.config.yaml"
+  inference_comparison:
+      enable: False
+      config: "config/analysis.config.yaml"
+      infer: False
+      analysis: False
+  arg_infer:
+      enable: False
+      config: "config/analysis.config.yaml"
+      infer: False
+      analysis: False
+      
+
+paths:
+# Software paths
+  relate: "/global/home/users/zhangyulin9806/relate_v1.1.5_x86_64_static"
+  relate_lib: "/global/home/users/zhangyulin9806/relate_lib-master"
+  argweaver: "/global/home/users/zhangyulin9806/argweaver/bin"
+  ibdmix_exe: "/global/scratch/users/zhangyulin9806/IBDmix/build/src/"
+  singer: "/global/scratch/users/zhangyulin9806/github/singer-0.1.8-beta-linux-x86_64/"
+  polarize_vcf: "data/other_methods_exe/polarize_vcf.py"
+  Sprime: "data/other_methods_exe/sprime.jar"
+# result repo alias
+  benchmark_simulations: "results/simulations"
+  benchmark_trace_outputs: "results/hmm_results"

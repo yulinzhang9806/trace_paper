@@ -1,0 +1,35 @@
+#!python3
+
+import os
+import yaml
+import pandas as pd
+import pathlib
+import json
+
+# enforce bash
+shell.executable("/bin/bash")
+sys.path.append(".")
+
+configfile: "config.yaml"
+paths = config["paths"]
+TARGETS = []
+
+for m in config["models"]:
+    for s in config["seeds"]:
+        # hmmix outputs
+        for samp in range(100):
+            TARGETS.append(f"results/{m}_model/hmmix/n100_seed{s}.tsk_{samp}.hap1.txt")
+            TARGETS.append(f"results/{m}_model/hmmix/n100_seed{s}.tsk_{samp}.hap2.txt")
+        # ibdmix outputs
+        TARGETS.append(f"results/{m}_model/ibdmix/n100_seed{s}_altai.ibdmix")
+        # singer sbatch files
+        TARGETS.append(f"results/{m}_model/singer/singer_base.sh")
+
+rule all:
+    input:
+        TARGETS,
+
+
+include: "simulations.smk"
+
+
