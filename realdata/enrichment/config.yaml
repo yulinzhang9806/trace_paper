@@ -1,16 +1,16 @@
 paths:
   manifesto_snpinfo_pref: "/global/scratch/users/zhangyulin9806/github/trace_paper/paths/snpinfo/1000g_biall_snpinfo.human_ancestor.archaic.yri.outgroup.strictmask.manifesto"
-  chrom_sizes: "sandbox/data/hg38.chrom.sizes"
-  strict_mask: "sandbox/data_from_brc/hg38_strictmask.bed"
-  centromeres: "sandbox/data/centromeres_grch38.singer_exclude_regions.bed"
-  gencode: "sandbox/data/gencode.v49.protein_coding.simple.bed"
+  chrom_sizes: "sandbox/configdata/hg38.chrom.sizes"
+  strict_mask: "sandbox/configdata/hg38_strictmask.bed"
+  centromeres: "sandbox/configdata/centromeres_grch38.singer_exclude_regions.bed"
+  gencode: "sandbox/configdata/gencode.v49.protein_coding.simple.bed"
 
 
 enrichments:
   datasets:
-    EUR: "sandbox/data_from_brc/singerave_t15000_eur.new.count_merge.txt"
-    OCN: "sandbox/data_from_brc/singerave_t15000_full_ocn.new.count_merge.txt"
-    SAS: "sandbox/data_from_brc/singerave_t15000_sas.new.count_merge.txt"
-    EAS: "sandbox/data_from_brc/singerave_t15000_eas.new.count_merge.txt"
-    LWK: "sandbox/data_from_brc/singerave_t15000_lwk.new.count_merge.txt"
-    YRI: "sandbox/data_from_brc/singerave_t15000_yri.new.count_merge.txt"
+    EUR: "sandbox/trace_zenodo/data/trace_t15000_eur.csv"
+    OCN: "sandbox/trace_zenodo/data/trace_t15000_ocn.csv"
+    SAS: "sandbox/trace_zenodo/data/trace_t15000_sas.csv"
+    EAS: "sandbox/trace_zenodo/data/trace_t15000_eas.csv"
+    LWK: "sandbox/trace_zenodo/data/trace_t15000_eafr.csv"
+    YRI: "sandbox/trace_zenodo/data/trace_t15000_wafr.csv"
