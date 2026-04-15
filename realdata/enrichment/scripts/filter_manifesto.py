@@ -236,43 +236,5 @@ def main():
     data = merge_df_count_branch_mut(countmerge, snpinfo, classify_rule)
     data.to_csv(output, sep="\t", index=False)
 
-    ## code for annotating npz files for plotting purpose
-    # for i in range(1, 23):
-    #     print("Processing chromosome:", i)
-    #     d = np.load(xss_pref + f"/chr{i}/singerave_t15000_{pop}_DEN.new.npz")
-    #     states_shape = d["states"].shape
-    #     treespan_phy = d["treespan_phy"]
-    #     window_size = int(treespan_phy[0, 1] - treespan_phy[0, 0])
-    #     nea_states = np.zeros(states_shape, dtype=d["states"].dtype)
-    #     den_states = np.zeros(states_shape, dtype=d["states"].dtype)
-    #     ghost_states = np.zeros(states_shape, dtype=d["states"].dtype)
-    #     chrom_df = data[data['chromosome'] == f'chr{i}']
-    #     ind_ids = chrom_df['ID'].values - np.min(data['ID'].values)
-    #     starts = (chrom_df['start'].values / window_size).astype(int)
-    #     ends = (chrom_df['end'].values / window_size).astype(int)
-    #     labels = chrom_df['assign_label'].values
-    #     nea_mask = (labels == "NEA")
-    #     den_mask = (labels == "DEN")
-    #     ghost_mask = (labels == unrec_label)
-    #     for idx in np.where(nea_mask)[0]:
-    #         ind_id = ind_ids[idx]
-    #         start_idx = starts[idx]
-    #         end_idx = ends[idx]
-    #         nea_states[ind_id, start_idx:end_idx] = 1
-    #     for idx in np.where(den_mask)[0]:
-    #         ind_id = ind_ids[idx]
-    #         start_idx = starts[idx]
-    #         end_idx = ends[idx]
-    #         den_states[ind_id, start_idx:end_idx] = 1
-    #     for idx in np.where(ghost_mask)[0]:
-    #         ind_id = ind_ids[idx]
-    #         start_idx = starts[idx]
-    #         end_idx = ends[idx]
-    #         ghost_states[ind_id, start_idx:end_idx] = 1
-    #     np.savez(xss_pref + f"/chr{i}/singerave_t15000_{pop}_NEA.manifesto.npz", states=nea_states, treespan_phy=treespan_phy)
-    #     np.savez(xss_pref + f"/chr{i}/singerave_t15000_{pop}_DEN.manifesto.npz", states=den_states, treespan_phy=treespan_phy)
-    #     np.savez(xss_pref + f"/chr{i}/singerave_t15000_{pop}_{unrec_label}.manifesto.npz", states=ghost_states, treespan_phy=treespan_phy)
-
-
 if __name__ == "__main__":
     main()

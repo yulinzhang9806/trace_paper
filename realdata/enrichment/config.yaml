@@ -1,5 +1,5 @@
 paths:
-  manifesto_snpinfo_pref: "/global/scratch/users/zhangyulin9806/github/trace_paper/paths/snpinfo/1000g_biall_snpinfo.human_ancestor.archaic.yri.outgroup.strictmask.manifesto"
+  manifesto_snpinfo_pref: "../../sandbox/1000g_biall_snpinfo.human_ancestor.archaic.yri.outgroup.strictmask.manifesto" # NOTE: this cna be generated aside from Zenodo (see README)
   chrom_sizes: "../../trace_zenodo/data/metadata/hg38.chrom.sizes"
   strict_mask: "../../trace_zenodo/data/metadata/hg38_strictmask.bed"
   centromeres: "../../trace_zenodo/data/metadata/centromeres_grch38.singer_exclude_regions.bed"

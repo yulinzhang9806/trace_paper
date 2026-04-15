@@ -2,3 +2,5 @@ paths/
 */results/*
 */.snakemake/*
 trace_zenodo/
+sandbox/
+
