@@ -4,11 +4,14 @@ import os
 
 import numpy as np
 import pandas as pd
+import polars as pl
 import tskit
 from intervaltree import Interval, IntervalTree
 from numpy import mean, median, var
 from scipy.optimize import differential_evolution, minimize
 from scipy.stats import gamma
+import matplotlib.pyplot as plt
+import warnings
 from tqdm import tqdm
 import sys
 import argparse
@@ -94,3 +97,61 @@ class Figure_utils:
             ax.spines["right"].set_visible(False)
         if top:
             ax.spines["top"].set_visible(False)
+
+    def remove_border(self, ax):
+        """
+        Remove border spines completely from a matplotlib axis.
+
+        :param matplotlib.pyplot.axis ax: Input axis.
+        """
+        for i in ["top", "bottom", "left", "right"]:
+            ax.spines[i].set_visible(False)
+
+    def remove_ticks(self, ax):
+        """
+        Remove the x and y ticks for conceptual plots.
+
+        :param matplotlib.pyplot.axis ax: Input axis.
+        """
+        ax.set_yticks([])
+        ax.set_xticks([])
+
+    def create_ideogram(self, chrom_df=None, **kwargs):
+        if chrom_df is None:
+            raise ValueError("Chromosome lengths need to be specified")
+        else:
+            assert "chrom" in chrom_df.columns
+            assert "size" in chrom_df.columns
+            fig, axs = plt.subplots(22, 1, **kwargs)
+            m_size = 0
+            for i in range(1, 23):
+                l = chrom_df.filter(pl.col("chrom") == f"chr{i}")["size"].to_numpy()[0]
+                if l >= m_size:
+                    m_size = l
+                self.remove_border(axs[i - 1])
+                self.remove_ticks(axs[i - 1])
+                axs[i - 1].add_patch(
+                    plt.Rectangle(
+                        (0, 0), l / 1e6, 1, ls="-", lw=1, ec="black", fc="none"
+                    )
+                )
+                axs[i - 1].plot([0, l / 1e6], [1, 1], color="none")
+            return fig, axs, m_size
+
+    def draw_deserts(self, axs, deserts_df=None, category="conservative", **kwargs):
+        """Draw deserts onto specific chromosomes."""
+        assert len(axs) == 22
+        # assert category in ['default', 'kerdoncuff', 'vernot', 'sankararaman', 'conservative']
+        assert deserts_df is not None
+        filt_deserts = deserts_df.filter(pl.col("type") == category)
+        for chrom, start, end in zip(
+            filt_deserts["chrom"].to_numpy(),
+            filt_deserts["start"].to_numpy(),
+            filt_deserts["end"].to_numpy(),
+        ):
+            try:
+                axid = int(chrom[3:]) - 1
+                axs[axid].axvspan(start / 1e6, end / 1e6, **kwargs)
+            except ValueError:
+                warnings.warn(f"{chrom} is not currently parseable!")
+        return axs
