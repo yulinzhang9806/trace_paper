@@ -15,6 +15,7 @@ rule all:
             dataset=config["enrichments"]["datasets"],
         ),
 
+
 rule annotate_manifesto:
     """Annotate the input tables with SNPs in archaic manifesto regions."""
     input:
@@ -22,16 +23,19 @@ rule annotate_manifesto:
             wildcards.population
         ],
         manifesto_snpinfo=expand(
-            config["paths"]["manifesto_snpinfo_pref"] + ".chr{CHROM}.txt", CHROM=range(1, 23)
-        )
+            config["paths"]["manifesto_snpinfo_pref"] + ".chr{CHROM}.txt",
+            CHROM=range(1, 23),
+        ),
     output:
         manifesto_table="results/enrichments/{population}/manifesto_filtered_segments.tsv",
     params:
         snpinfo_pref=config["paths"]["manifesto_snpinfo_pref"],
     shell:
         """
-        python scripts/annotate_manifesto.py --input {input.filtered_segments} --snpinfo-pref {params.snpinfo_pref} --output {output.manifesto_table}
-        """
+python scripts/annotate_manifesto.py --input {input.filtered_segments} --snpinfo-pref {params.snpinfo_pref} --output {output.manifesto_table}
+
+"""
+
 
 rule determine_peaks_bed:
     """Create a bed file for peaks of archaic ancestry."""

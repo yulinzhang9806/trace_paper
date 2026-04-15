@@ -1,7 +1,6 @@
 paths/
-realdata/simulations/results/
-realdata/simulations/.snakemake/
-realdata/run_trace/snpinfo/.snakemake/
-trace_benchmark/.snakemake/
-realdata/enrichment/.snakemake/
-trace_zenodo
+*/results/*
+*/.snakemake/*
+trace_zenodo/
+sandbox/
+
