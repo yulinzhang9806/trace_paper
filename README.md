@@ -1,6 +1,12 @@
 # TRACE Results Replication
 
-This repository is meant to contain all of the 
+This repository is meant to contain all of the necessary workflows and plotting code for recreating the primary figures in the following manuscript: 
+
+```
+Recovering signatures of archaic introgression using ancestral recombination graphs.
+Yulin Zhang, Arjun Biddanda, Sarah A. Johnson, Colm O’Dushlaine, Priya Moorjani
+bioRxiv 2026.03.03.709416; doi: https://doi.org/10.64898/2026.03.03.709416
+```
 
 ## Dependencies and Installation
 
